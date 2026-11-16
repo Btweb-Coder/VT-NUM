@@ -481,7 +481,7 @@ class _GuideDialogState extends State<_GuideDialog> {
                         duration: Duration(milliseconds: (body.length * 14).clamp(850, 1700).toInt()),
                         curve: Curves.easeOut,
                         builder: (context, value, _) {
-                          final visible = (body.length * value).round().clamp(0, body.length);
+                          final visible = (body.length * value).round().clamp(0, body.length).toInt();
                           return Text(
                             body.substring(0, visible),
                             style: const TextStyle(color: Color(0xFFC1CBE0), fontSize: 14, height: 1.65),
