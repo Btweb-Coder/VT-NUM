@@ -8,6 +8,7 @@ import '../features/active/pages/active_page.dart';
 import '../features/orders/pages/orders_page.dart';
 import '../features/wallet/pages/wallet_page.dart';
 import '../features/profile/pages/profile_page.dart';
+import '../features/referrals/pages/referral_page.dart';
 import '../features/rentals/pages/rentals_page.dart';
 import '../features/support/pages/support_chat_page.dart';
 import '../core/services/catalog_bootstrap_service.dart';
@@ -103,6 +104,13 @@ class _AppRouterState extends State<AppRouter> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ProfilePage()),
+              );
+            },
+            onReferrals: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ReferralPage()),
               );
             },
           );
@@ -285,11 +293,13 @@ class _MoreSheet extends StatelessWidget {
   final VoidCallback onWallet;
   final VoidCallback onRentals;
   final VoidCallback onProfile;
+  final VoidCallback onReferrals;
 
   const _MoreSheet({
     required this.onWallet,
     required this.onRentals,
     required this.onProfile,
+    required this.onReferrals,
   });
 
   @override
@@ -332,6 +342,11 @@ class _MoreSheet extends StatelessWidget {
             icon: Icons.account_balance_wallet_outlined,
             title: context.strings.text('wallet.title'),
             onTap: onWallet,
+          ),
+          _item(
+            icon: Icons.card_giftcard_outlined,
+            title: context.strings.text('referral.title'),
+            onTap: onReferrals,
           ),
           _item(
             icon: Icons.person_outline,
