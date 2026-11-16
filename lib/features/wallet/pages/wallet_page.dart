@@ -9,6 +9,7 @@ import '../../../core/services/wallet_repository.dart';
 import '../../../core/services/wallet_ledger_repository.dart';
 import '../data/payment_gateway_repository.dart';
 import '../data/top_up_repository.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key, this.openTopUpOnStart = false});

@@ -39,6 +39,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
       final preferences = await SharedPreferences.getInstance();
       await preferences.setBool('online_sim_onboarding_completed', true);
       await preferences.setBool('online_sim_first_time_guide_pending', true);
+      await preferences.setBool('online_sim_first_time_guide_enabled', true);
     } catch (_) {
       // L'accès à l'application reste possible même si la sauvegarde échoue.
     }

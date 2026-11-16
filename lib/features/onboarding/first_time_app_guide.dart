@@ -6,6 +6,8 @@ class FirstTimeAppGuide {
 
   static const pendingPreferenceKey =
       'online_sim_first_time_guide_pending';
+  static const enabledPreferenceKey =
+      'online_sim_first_time_guide_enabled';
   static const _sections = <String>[
     'auth', 'home', 'activate', 'active', 'history', 'topup',
   ];
@@ -18,6 +20,15 @@ class FirstTimeAppGuide {
     try {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool(pendingPreferenceKey) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> wasEnabledForThisInstall() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(enabledPreferenceKey) ?? false;
     } catch (_) {
       return false;
     }
