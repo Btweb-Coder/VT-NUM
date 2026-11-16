@@ -139,7 +139,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('12345678…'), findsOneWidget);
-    expect(find.text('+$0.50'), findsOneWidget);
+    expect(find.text('+\\$0.50'), findsOneWidget);
     expect(repository.historyRequests, 1);
 
     await tester.pumpWidget(const SizedBox.shrink());
