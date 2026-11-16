@@ -768,7 +768,7 @@
     "copy_invite": "Copier le message d'invitation",
     "copied": "Copié dans le presse-papiers.",
     "invite_message": "Rejoignez VT NUM avec mon code de parrainage : {code}",
-    "unlock_progress": "Effectuez deux activations admissibles avec SMS reçu pour débloquer votre code.",
+    "unlock_progress": "Vous avez effectué {count} activation(s) admissible(s) sur 2. Effectuez-en deux pour débloquer votre code.",
     "unlock_hint": "Les activations VT-NUM et T-NUM sont prises en compte. Les locations Proxnum ne comptent pas.",
     "load_error": "Impossible de charger vos informations de parrainage. Veuillez réessayer.",
     "rate_unavailable": "Les retraits sont temporairement indisponibles pendant la configuration du taux USD/FCFA.",
