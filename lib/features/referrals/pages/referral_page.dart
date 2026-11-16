@@ -201,7 +201,7 @@ class _ReferralPageState extends State<ReferralPage> {
 
   Widget _hero(bool unlocked, String? code) {
     final count = (_data['eligible_activations'] as num?)?.toInt() ?? 0;
-    final progress = (count / 2).clamp(0.0, 1.0);
+    final progress = (count / 2).clamp(0.0, 1.0).toDouble();
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
       decoration: BoxDecoration(
