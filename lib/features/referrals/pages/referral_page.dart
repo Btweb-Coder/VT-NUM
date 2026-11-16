@@ -445,93 +445,269 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
 }
 
 class _HistorySheet extends StatelessWidget {
-  const _HistorySheet({required this.repository, required this.withdrawals, required this.text});
+  const _HistorySheet({
+    required this.repository,
+    required this.withdrawals,
+    required this.text,
+  });
+
   final ReferralRepository repository;
   final bool withdrawals;
   final String Function(String) text;
 
   @override
-  Widget build(BuildContext context) => Container(
-        height: MediaQuery.sizeOf(context).height * 0.78,
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        decoration: const BoxDecoration(color: Color(0xFF101522), borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
-        child: Column(children: [
-          Container(width: 42, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10))),
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.sizeOf(context).height * 0.78,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      decoration: const BoxDecoration(
+        color: Color(0xFF101522),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 42,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
           const SizedBox(height: 22),
-          Align(alignment: Alignment.centerLeft, child: Text(text(withdrawals ? 'withdrawal_history' : 'referral_history'), style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900))),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              text(withdrawals ? 'withdrawal_history' : 'referral_history'),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 19,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
           const SizedBox(height: 12),
           Expanded(
             child: FutureBuilder<Map<String, dynamic>>(
               future: repository.getHistory(limit: 100),
               builder: (context, snapshot) {
-                if (snapshot.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator(color: Color(0xFF7EA8FF)));
-                if (snapshot.hasError) return Center(child: Text(text('history_error'), style: const TextStyle(color: Colors.white70)));
-                final raw = snapshot.data?[withdrawals ? 'withdrawals' : 'referrals'];
-                final items = raw is List ? raw : const [];
-                if (items.isEmpty) return Center(child: Text(text('history_empty'), style: const TextStyle(color: Color(0xFF8998B7))));
-                return ListView.separated(
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1),
-                  itemBuilder: (context, i) {
-                    final item = Map<String, dynamic>.from(items[i] as Map);
-                    return withdrawals ? _withdrawalRow(item) : _referralRow(item);
-                  },
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF7EA8FF)),
+                  );
+                }
+                if (snapshot.hasError || snapshot.data == null) {
+                  return Center(
+                    child: Text(
+                      text('history_error'),
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  );
+                }
+
+                final data = snapshot.data!;
+                if (withdrawals) {
+                  final raw = data['withdrawals'];
+                  final items = raw is List ? raw : const [];
+                  if (items.isEmpty) return _empty();
+                  return ListView.separated(
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(color: Colors.white10, height: 1),
+                    itemBuilder: (context, index) {
+                      final item = Map<String, dynamic>.from(items[index] as Map);
+                      return _withdrawalRow(item);
+                    },
+                  );
+                }
+
+                final referralsRaw = data['referrals'];
+                final commissionsRaw = data['commission_events'];
+                final referrals = referralsRaw is List ? referralsRaw : const [];
+                final commissions =
+                    commissionsRaw is List ? commissionsRaw : const [];
+                if (referrals.isEmpty && commissions.isEmpty) return _empty();
+
+                return ListView(
+                  children: [
+                    _heading(text('referral_history')),
+                    if (referrals.isEmpty)
+                      _emptyInline()
+                    else
+                      ...referrals.map((raw) => _referralRow(
+                            Map<String, dynamic>.from(raw as Map),
+                          )),
+                    const SizedBox(height: 14),
+                    _heading(text('commission_activity')),
+                    if (commissions.isEmpty)
+                      _emptyInline()
+                    else
+                      ...commissions.map((raw) => _commissionRow(
+                            Map<String, dynamic>.from(raw as Map),
+                          )),
+                  ],
                 );
               },
             ),
           ),
-        ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _empty() => Center(
+        child: Text(
+          text('history_empty'),
+          style: const TextStyle(color: Color(0xFF8998B7)),
+        ),
       );
 
+  Widget _emptyInline() => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Text(
+          text('history_empty'),
+          style: const TextStyle(color: Color(0xFF8998B7), fontSize: 11),
+        ),
+      );
+
+  Widget _heading(String title) => Padding(
+        padding: const EdgeInsets.only(top: 8, bottom: 4),
+        child: Text(
+          title.toUpperCase(),
+          style: const TextStyle(
+            color: Color(0xFF8998B7),
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+      );
+
+  String _shortUserId(Object? raw) {
+    final id = (raw ?? '').toString();
+    return id.length > 12 ? id.substring(0, 8) + '…' : id;
+  }
+
   Widget _referralRow(Map<String, dynamic> item) {
-    final id = (item['user_id'] ?? '').toString();
-    final shownId = id.length > 12 ? id.substring(0, 8) + '…' : id;
     final depositCount = (item['successful_deposits'] ?? 0).toString();
-    final commission = ((item['commission_usd'] as num?) ?? 0).toStringAsFixed(2);
+    final commission = ((item['commission_usd'] as num?) ?? 0)
+        .toStringAsFixed(2);
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 5),
-      leading: const CircleAvatar(backgroundColor: Color(0xFF202F55), child: Icon(Icons.person_outline_rounded, color: Color(0xFF9EBBFF))),
-      title: Text(shownId, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-      subtitle: Text(text('deposits') + ': ' + depositCount + ' • ' + text('joined') + ': ' + _date(item['joined_at']), style: const TextStyle(color: Color(0xFF8998B7), fontSize: 10)),
-      trailing: Text('\$' + commission, style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 12, fontWeight: FontWeight.w900)),
+      contentPadding: const EdgeInsets.symmetric(vertical: 3),
+      leading: const CircleAvatar(
+        backgroundColor: Color(0xFF202F55),
+        child: Icon(Icons.person_outline_rounded, color: Color(0xFF9EBBFF)),
+      ),
+      title: Text(
+        _shortUserId(item['user_id']),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      subtitle: Text(
+        text('deposits') + ': ' + depositCount +
+            ' • ' + text('joined') + ': ' + _date(item['joined_at']),
+        style: const TextStyle(color: Color(0xFF8998B7), fontSize: 10),
+      ),
+      trailing: Text(
+        '\$' + commission,
+        style: const TextStyle(
+          color: Color(0xFF6EE7B7),
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
+  Widget _commissionRow(Map<String, dynamic> item) {
+    final amount = ((item['amount_usd'] as num?) ?? 0).toStringAsFixed(2);
+    return ListTile(
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      leading: const Icon(
+        Icons.check_circle_outline_rounded,
+        color: Color(0xFF6EE7B7),
+      ),
+      title: Text(
+        text('deposit_reward') + ' • ' + _shortUserId(item['referee_user_id']),
+        style: const TextStyle(color: Colors.white, fontSize: 11),
+      ),
+      subtitle: Text(
+        _date(item['created_at']),
+        style: const TextStyle(color: Color(0xFF8998B7), fontSize: 10),
+      ),
+      trailing: Text(
+        '+\$' + amount,
+        style: const TextStyle(
+          color: Color(0xFF6EE7B7),
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
     );
   }
 
   Widget _withdrawalRow(Map<String, dynamic> item) {
     final status = (item['status'] ?? '').toString();
-    final color = status == 'PAID' ? const Color(0xFF6EE7B7) : status == 'REJECTED' ? const Color(0xFFFF8585) : const Color(0xFFFFD58A);
+    final color = status == 'PAID'
+        ? const Color(0xFF6EE7B7)
+        : status == 'REJECTED'
+            ? const Color(0xFFFF8585)
+            : const Color(0xFFFFD58A);
     final reason = item['rejection_reason']?.toString() ?? '';
     final paymentRef = item['payment_reference']?.toString() ?? '';
     final accountName = item['account_name']?.toString() ?? '';
     final phone = item['phone_number']?.toString() ?? '';
-    final network = item['network'] == 'MTN_MOMO' ? text('mtn_momo') : text('orange_money');
+    final network = item['network'] == 'MTN_MOMO'
+        ? text('mtn_momo')
+        : text('orange_money');
     final amount = ((item['amount_usd'] as num?) ?? 0).toStringAsFixed(2);
     final xaf = ((item['amount_xaf'] as num?) ?? 0).toStringAsFixed(0);
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 5),
       leading: Icon(Icons.account_balance_wallet_outlined, color: color),
-      title: Text('\
-  }
-
-  String _date(Object? input) {
-    if (input == null) return '—';
-    final date = DateTime.tryParse(input.toString());
-    if (date == null) return '—';
-    final local = date.toLocal();
-    final day = local.day.toString().padLeft(2, '0');
-    final month = local.month.toString().padLeft(2, '0');
-    return day + '/' + month + '/' + local.year.toString();
-  }
-}
- + amount + ' • ' + xaf + ' FCFA', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
-      subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(network + ' • ' + phone + (accountName.isEmpty ? '' : ' • ' + accountName), style: const TextStyle(color: Color(0xFFB7C7E5), fontSize: 10)),
-        Text(text('status') + ': ' + text(status.toLowerCase()) + ' • ' + text('requested') + ': ' + _date(item['created_at']), style: const TextStyle(color: Color(0xFF8998B7), fontSize: 10)),
-        if (reason.isNotEmpty) Text(text('rejection_reason') + ': ' + reason, style: const TextStyle(color: Color(0xFFFF8585), fontSize: 10)),
-        if (paymentRef.isNotEmpty) Text(text('payment_reference') + ': ' + paymentRef, style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 10)),
-      ]),
+      title: Text(
+        '\$' + amount + ' • ' + xaf + ' FCFA',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            network + ' • ' + phone +
+                (accountName.isEmpty ? '' : ' • ' + accountName),
+            style: const TextStyle(color: Color(0xFFB7C7E5), fontSize: 10),
+          ),
+          Text(
+            text('status') + ': ' + text(status.toLowerCase()) +
+                ' • ' + text('requested') + ': ' + _date(item['created_at']),
+            style: const TextStyle(color: Color(0xFF8998B7), fontSize: 10),
+          ),
+          if (reason.isNotEmpty)
+            Text(
+              text('rejection_reason') + ': ' + reason,
+              style: const TextStyle(color: Color(0xFFFF8585), fontSize: 10),
+            ),
+          if (paymentRef.isNotEmpty)
+            Text(
+              text('payment_reference') + ': ' + paymentRef,
+              style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 10),
+            ),
+        ],
+      ),
       isThreeLine: true,
-      trailing: Text(status, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900)),
+      trailing: Text(
+        status,
+        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900),
+      ),
     );
   }
 
