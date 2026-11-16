@@ -768,7 +768,7 @@
     "copy_invite": "Copy invitation message",
     "copied": "Copied to clipboard.",
     "invite_message": "Join VT NUM with my referral code: {code}",
-    "unlock_progress": "Complete two qualifying SMS activations to unlock your code.",
+    "unlock_progress": "You have completed {count} of 2 qualifying SMS activations. Complete two to unlock your code.",
     "unlock_hint": "VT-NUM and T-NUM activations count. Proxnum rentals do not count.",
     "load_error": "Unable to load your referral information. Please try again.",
     "rate_unavailable": "Withdrawals are temporarily unavailable while the USD to FCFA rate is being configured.",
