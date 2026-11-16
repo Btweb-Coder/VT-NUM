@@ -501,18 +501,35 @@ class _HistorySheet extends StatelessWidget {
     final color = status == 'PAID' ? const Color(0xFF6EE7B7) : status == 'REJECTED' ? const Color(0xFFFF8585) : const Color(0xFFFFD58A);
     final reason = item['rejection_reason']?.toString() ?? '';
     final paymentRef = item['payment_reference']?.toString() ?? '';
+    final accountName = item['account_name']?.toString() ?? '';
+    final phone = item['phone_number']?.toString() ?? '';
+    final network = item['network'] == 'MTN_MOMO' ? text('mtn_momo') : text('orange_money');
     final amount = ((item['amount_usd'] as num?) ?? 0).toStringAsFixed(2);
     final xaf = ((item['amount_xaf'] as num?) ?? 0).toStringAsFixed(0);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 5),
       leading: Icon(Icons.account_balance_wallet_outlined, color: color),
-      title: Text('\$' + amount + ' • ' + xaf + ' FCFA', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+      title: Text('\
+  }
+
+  String _date(Object? input) {
+    if (input == null) return '—';
+    final date = DateTime.tryParse(input.toString());
+    if (date == null) return '—';
+    final local = date.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    return day + '/' + month + '/' + local.year.toString();
+  }
+}
+ + amount + ' • ' + xaf + ' FCFA', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(network + ' • ' + phone + (accountName.isEmpty ? '' : ' • ' + accountName), style: const TextStyle(color: Color(0xFFB7C7E5), fontSize: 10)),
         Text(text('status') + ': ' + text(status.toLowerCase()) + ' • ' + text('requested') + ': ' + _date(item['created_at']), style: const TextStyle(color: Color(0xFF8998B7), fontSize: 10)),
         if (reason.isNotEmpty) Text(text('rejection_reason') + ': ' + reason, style: const TextStyle(color: Color(0xFFFF8585), fontSize: 10)),
         if (paymentRef.isNotEmpty) Text(text('payment_reference') + ': ' + paymentRef, style: const TextStyle(color: Color(0xFF6EE7B7), fontSize: 10)),
       ]),
-      isThreeLine: reason.isNotEmpty,
+      isThreeLine: true,
       trailing: Text(status, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900)),
     );
   }
