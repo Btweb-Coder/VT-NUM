@@ -753,6 +753,8 @@
     "available_balance": "Available balance",
     "total_withdrawn": "Total withdrawn",
     "successful_deposits": "Rewarded deposits",
+    "commission_activity": "Commission activity",
+    "deposit_reward": "Successful deposit reward",
     "referred_users": "People invited",
     "withdrawals": "Withdrawals",
     "withdrawal_rules": "Withdraw between {min} and {max}. Payments are sent in FCFA to MTN Mobile Money or Orange Money. Processing target: within 24 hours.",
