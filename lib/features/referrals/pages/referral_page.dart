@@ -5,14 +5,18 @@ import '../../../app/localization/app_localizations.dart';
 import '../data/referral_repository.dart';
 
 class ReferralPage extends StatefulWidget {
-  const ReferralPage({super.key});
+  const ReferralPage({super.key, this.repository});
+
+  /// Optional repository injection keeps referral UI tests independent of
+  /// the live Supabase project.
+  final ReferralRepository? repository;
 
   @override
   State<ReferralPage> createState() => _ReferralPageState();
 }
 
 class _ReferralPageState extends State<ReferralPage> {
-  final _repository = ReferralRepository();
+  late final ReferralRepository _repository;
   bool _loading = true;
   String? _error;
   Map<String, dynamic> _data = const {};
@@ -27,6 +31,7 @@ class _ReferralPageState extends State<ReferralPage> {
   @override
   void initState() {
     super.initState();
+    _repository = widget.repository ?? ReferralRepository();
     _load();
   }
 
