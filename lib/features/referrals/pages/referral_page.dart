@@ -381,6 +381,7 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
                 final n = double.tryParse(v?.trim() ?? '');
                 if (n == null || n <= 0) return widget.text('invalid_amount');
                 if (n < widget.minimum || n > widget.maximum) return widget.text('amount_out_of_range');
+                if ((n * 100 - (n * 100).round()).abs() > 0.000001) return widget.text('invalid_amount');
                 if (n > widget.available) return widget.text('insufficient_balance');
                 return null;
               }, keyboard: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => setState(() {})),
