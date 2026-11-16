@@ -247,7 +247,9 @@ class _ActivatePageState extends State<ActivatePage>
       }
 
       try {
-        await _showActivationNotice();
+        final firstTimeGuidePending =
+            await FirstTimeAppGuide.isPending();
+        if (!firstTimeGuidePending) await _showActivationNotice();
         if (mounted && widget.isVisible) {
           await FirstTimeAppGuide.showIfNeeded(context, 'activate');
         }

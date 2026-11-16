@@ -7,7 +7,7 @@ class FirstTimeAppGuide {
   static const pendingPreferenceKey =
       'online_sim_first_time_guide_pending';
   static const _sections = <String>[
-    'auth', 'home', 'activate', 'active', 'history', 'wallet', 'topup',
+    'auth', 'home', 'activate', 'active', 'history', 'topup',
   ];
   static final Set<String> _showing = <String>{};
 
@@ -196,21 +196,6 @@ class FirstTimeAppGuide {
             'Pull the list down to refresh your records when you want to see the latest information.',
             'Faites glisser la liste vers le bas pour actualiser les opérations et voir les dernières informations.'),
         ];
-      case 'wallet':
-        return const [
-          _GuideStep('AVAILABLE BALANCE', 'SOLDE DISPONIBLE',
-            'Understand your wallet', 'Comprenez votre portefeuille',
-            'Available balance is the amount you can use for new activations. Held balance is temporarily reserved for operations still processing.',
-            'Le solde disponible est utilisable pour de nouvelles activations. Le solde bloqué est temporairement réservé aux opérations en cours.'),
-          _GuideStep('ADD FUNDS BUTTON', 'BOUTON RECHARGER',
-            'Open the recharge form', 'Ouvrez le formulaire de recharge',
-            'Tap Add funds to choose a payment provider and request a wallet recharge. The next guide explains the fields in that form.',
-            'Touchez Recharger pour choisir un prestataire de paiement et demander une recharge. Le guide suivant explique les champs du formulaire.'),
-          _GuideStep('RECENT TOP-UPS', 'RECHARGES RÉCENTES',
-            'Check previous recharges', 'Consultez vos recharges',
-            'This list shows recent recharge attempts and their statuses. A recharge can be spent only after it is confirmed successful.',
-            'Cette liste affiche vos tentatives de recharge et leurs statuts. Une recharge devient utilisable uniquement après confirmation de sa réussite.'),
-        ];
       case 'topup':
         return const [
           _GuideStep('PAYMENT PROVIDER', 'PRESTATAIRE DE PAIEMENT',
@@ -280,7 +265,6 @@ class _GuideDialogState extends State<_GuideDialog> {
       'activate' => fr ? 'ACTIVATION' : 'ACTIVATION',
       'active' => fr ? 'ACTIVATIONS EN COURS' : 'ACTIVE ACTIVATIONS',
       'history' => fr ? 'HISTORIQUE' : 'HISTORY',
-      'wallet' => fr ? 'PORTEFEUILLE' : 'WALLET',
       'topup' => fr ? 'RECHARGE' : 'TOP-UP',
       _ => 'GUIDE',
     };
