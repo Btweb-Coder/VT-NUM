@@ -758,6 +758,8 @@
     "available_balance": "Solde disponible",
     "total_withdrawn": "Total retiré",
     "successful_deposits": "Recharges récompensées",
+    "commission_activity": "Activité des commissions",
+    "deposit_reward": "Commission sur recharge réussie",
     "referred_users": "Personnes invitées",
     "withdrawals": "Retraits",
     "withdrawal_rules": "Retirez entre {min} et {max}. Les paiements sont envoyés en FCFA via MTN Mobile Money ou Orange Money. Délai cible de traitement : 24 heures.",
