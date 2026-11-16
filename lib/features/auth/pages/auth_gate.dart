@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -150,6 +150,10 @@ String _friendlyAuthError(BuildContext context, AuthException error) {
       message.contains('already exists') ||
       message.contains('already been registered')) {
     return context.strings.text('auth.errors.email_already_registered');
+  }
+
+  if (message.contains('INVALID_OR_UNAVAILABLE_REFERRAL_CODE')) {
+    return context.strings.text('referral.invalid_code');
   }
 
   if (message.contains('password')) {
@@ -982,6 +986,7 @@ class _SignInPageState extends State<SignInPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _referralCodeController = TextEditingController();
 
   bool _registering = false;
   bool _submitting = false;
@@ -992,6 +997,7 @@ class _SignInPageState extends State<SignInPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 
@@ -1020,6 +1026,7 @@ class _SignInPageState extends State<SignInPage> {
         await widget.authService.register(
           email: _emailController.text,
           password: _passwordController.text,
+          referralCode: _referralCodeController.text,
         );
 
         if (!mounted) return;
@@ -1038,6 +1045,7 @@ setState(() {
   _registering = false;
   _acceptedTerms = false;
   _passwordController.clear();
+  _referralCodeController.clear();
 });
       } else {
         await widget.authService.signIn(
@@ -1292,6 +1300,29 @@ setState(() {
                                 return null;
                               },
                             ),
+
+                            // Optional referral code. Kept separate from existing auth and terms flow.
+                            if (isRegistering) ...[
+                              const SizedBox(height: 17),
+                              TextFormField(
+                                controller: _referralCodeController,
+                                enabled: !_submitting,
+                                textCapitalization: TextCapitalization.characters,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+                                  LengthLimitingTextInputFormatter(10),
+                                ],
+                                style: const TextStyle(color: Colors.white, fontSize: 14),
+                                cursorColor: const Color(0xFF83B6FF),
+                                decoration: _premiumInputDecoration(
+                                  label: context.strings.text('referral.signup_code'),
+                                  icon: Icons.card_giftcard_rounded,
+                                ).copyWith(
+                                  helperText: context.strings.text('referral.signup_optional'),
+                                  helperStyle: const TextStyle(color: Color(0xFF94A6CB), fontSize: 11),
+                                ),
+                              ),
+                            ],
 
                             // CGU : obligatoires pendant l'inscription.
                             if (isRegistering) ...[
