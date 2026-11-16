@@ -8,6 +8,8 @@ class FirstTimeAppGuide {
       'online_sim_first_time_guide_pending';
   static const enabledPreferenceKey =
       'online_sim_first_time_guide_enabled';
+  static const registeredPreferenceKey =
+      'online_sim_first_time_guide_registered';
   static const _sections = <String>[
     'auth', 'home', 'activate', 'active', 'history', 'topup',
   ];
@@ -25,12 +27,43 @@ class FirstTimeAppGuide {
     }
   }
 
-  static Future<bool> wasEnabledForThisInstall() async {
+  static Future<bool> isSectionCompleted(String section) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(enabledPreferenceKey) ?? false;
+      return prefs.getBool(_doneKey(section)) ?? false;
     } catch (_) {
       return false;
+    }
+  }
+
+  static Future<bool> wasRegisteredOnThisInstall() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(registeredPreferenceKey) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> markRegistrationCompleted() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(registeredPreferenceKey, true);
+    } catch (_) {
+      // A local guide preference must never block account registration.
+    }
+  }
+
+  static Future<void> handleSignInSuccess() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final registered = prefs.getBool(registeredPreferenceKey) ?? false;
+      if (!registered) {
+        // Existing accounts on a new installation should not receive the new-user tour.
+        await prefs.setBool(pendingPreferenceKey, false);
+      }
+    } catch (_) {
+      // Guide preferences are optional and never affect authentication.
     }
   }
 
@@ -45,6 +78,10 @@ class FirstTimeAppGuide {
       if (!context.mounted ||
           prefs.getBool(pendingPreferenceKey) != true ||
           prefs.getBool(_doneKey(section)) == true) {
+        return;
+      }
+      if (section != 'auth' &&
+          prefs.getBool(registeredPreferenceKey) != true) {
         return;
       }
 

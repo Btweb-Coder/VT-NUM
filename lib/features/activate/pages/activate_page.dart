@@ -247,9 +247,9 @@ class _ActivatePageState extends State<ActivatePage>
       }
 
       try {
-        final guideWasEnabled =
-            await FirstTimeAppGuide.wasEnabledForThisInstall();
-        if (!guideWasEnabled) await _showActivationNotice();
+        final newlyRegistered =
+            await FirstTimeAppGuide.wasRegisteredOnThisInstall();
+        if (!newlyRegistered) await _showActivationNotice();
         if (mounted && widget.isVisible) {
           await FirstTimeAppGuide.showIfNeeded(context, 'activate');
         }

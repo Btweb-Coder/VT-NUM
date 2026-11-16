@@ -1,7 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'onboarding_page.dart';
 
 class OnboardingGate extends StatefulWidget {
   const OnboardingGate({super.key, required this.child});
@@ -13,43 +11,42 @@ class OnboardingGate extends StatefulWidget {
 }
 
 class _OnboardingGateState extends State<OnboardingGate> {
-  bool? _completed;
+  bool _ready = false;
 
   @override
   void initState() {
     super.initState();
-    _loadStatus();
+    _prepareFirstTimeGuide();
   }
 
-  Future<void> _loadStatus() async {
+  Future<void> _prepareFirstTimeGuide() async {
     try {
       final preferences = await SharedPreferences.getInstance();
       final completed =
           preferences.getBool('online_sim_onboarding_completed') ?? false;
 
-      if (mounted) setState(() => _completed = completed);
+      if (!completed) {
+        // The interactive guide replaces the previous generic first-run slides.
+        await preferences.setBool('online_sim_onboarding_completed', true);
+        await preferences.setBool(
+          'online_sim_first_time_guide_pending',
+          true,
+        );
+        await preferences.setBool(
+          'online_sim_first_time_guide_enabled',
+          true,
+        );
+      }
     } catch (_) {
-      // En cas d'erreur de stockage, ne pas bloquer l'accès à l'application.
-      if (mounted) setState(() => _completed = true);
-    }
-  }
-
-  Future<void> _finishOnboarding() async {
-    try {
-      final preferences = await SharedPreferences.getInstance();
-      await preferences.setBool('online_sim_onboarding_completed', true);
-      await preferences.setBool('online_sim_first_time_guide_pending', true);
-      await preferences.setBool('online_sim_first_time_guide_enabled', true);
-    } catch (_) {
-      // L'accès à l'application reste possible même si la sauvegarde échoue.
+      // Storage errors must never block access to the app.
     }
 
-    if (mounted) setState(() => _completed = true);
+    if (mounted) setState(() => _ready = true);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_completed == null) {
+    if (!_ready) {
       return const Scaffold(
         backgroundColor: Color(0xFF080B18),
         body: Center(
@@ -58,8 +55,6 @@ class _OnboardingGateState extends State<OnboardingGate> {
       );
     }
 
-    if (_completed!) return widget.child;
-
-    return OnboardingPage(onFinished: _finishOnboarding);
+    return widget.child;
   }
 }

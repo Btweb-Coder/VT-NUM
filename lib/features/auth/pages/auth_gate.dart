@@ -9,6 +9,7 @@ import '../../../app/router.dart';
 import '../../../app/theme/colors.dart';
 import '../../../core/services/auth_service.dart';
 import '../../onboarding/first_time_app_guide.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 enum _AlertType { success, error, info }
 
@@ -1002,7 +1003,11 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   Future<void> _prepareFirstTimeGuide() async {
-    if (!await FirstTimeAppGuide.isPending() || !mounted) return;
+    if (!await FirstTimeAppGuide.isPending() ||
+        await FirstTimeAppGuide.isSectionCompleted('auth') ||
+        !mounted) {
+      return;
+    }
     setState(() => _registering = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -1046,6 +1051,7 @@ class _SignInPageState extends State<SignInPage> {
           password: _passwordController.text,
           referralCode: _referralCodeController.text,
         );
+        await FirstTimeAppGuide.markRegistrationCompleted();
 
         if (!mounted) return;
 
@@ -1070,6 +1076,7 @@ setState(() {
           email: _emailController.text,
           password: _passwordController.text,
         );
+        await FirstTimeAppGuide.handleSignInSuccess();
       }
     } on AuthException catch (error) {
       if (!mounted) return;
