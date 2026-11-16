@@ -32,10 +32,6 @@ class _OnboardingGateState extends State<OnboardingGate> {
           'online_sim_first_time_guide_pending',
           true,
         );
-        await preferences.setBool(
-          'online_sim_first_time_guide_enabled',
-          true,
-        );
       }
     } catch (_) {
       // Storage errors must never block access to the app.

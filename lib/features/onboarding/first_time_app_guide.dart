@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -6,14 +8,13 @@ class FirstTimeAppGuide {
 
   static const pendingPreferenceKey =
       'online_sim_first_time_guide_pending';
-  static const enabledPreferenceKey =
-      'online_sim_first_time_guide_enabled';
   static const registeredPreferenceKey =
       'online_sim_first_time_guide_registered';
   static const _sections = <String>[
     'auth', 'home', 'activate', 'active', 'history', 'topup',
   ];
   static final Set<String> _showing = <String>{};
+  static Completer<void>? _registrationCompletion;
 
   static String _doneKey(String section) =>
       'online_sim_first_time_guide_done_' + section;
@@ -45,16 +46,38 @@ class FirstTimeAppGuide {
     }
   }
 
+  static void beginRegistrationAttempt() {
+    _registrationCompletion = Completer<void>();
+  }
+
   static Future<void> markRegistrationCompleted() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(registeredPreferenceKey, true);
     } catch (_) {
       // A local guide preference must never block account registration.
+    } finally {
+      _finishRegistrationAttempt();
+    }
+  }
+
+  static void endRegistrationAttempt() {
+    _finishRegistrationAttempt();
+  }
+
+  static void _finishRegistrationAttempt() {
+    final completion = _registrationCompletion;
+    _registrationCompletion = null;
+    if (completion != null && !completion.isCompleted) {
+      completion.complete();
     }
   }
 
   static Future<void> handleSignInSuccess() async {
+    final registrationCompletion = _registrationCompletion;
+    if (registrationCompletion != null) {
+      await registrationCompletion.future;
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
       final registered = prefs.getBool(registeredPreferenceKey) ?? false;

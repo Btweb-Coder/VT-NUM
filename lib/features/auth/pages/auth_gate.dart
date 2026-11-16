@@ -201,8 +201,13 @@ class _AuthGateState extends State<AuthGate> {
     super.initState();
 
     _authSubscription = widget.authService.authStateChanges.listen(
-      (state) {
+      (state) async {
         if (!mounted) return;
+
+        if (state.session?.user.emailConfirmedAt != null) {
+          await FirstTimeAppGuide.handleSignInSuccess();
+          if (!mounted) return;
+        }
 
         // A confirmed session created by the email callback must not open the app.
         // Only accept signedIn events initiated by the manual email/password form.
@@ -1046,6 +1051,7 @@ class _SignInPageState extends State<SignInPage> {
 
   try {
       if (_registering) {
+        FirstTimeAppGuide.beginRegistrationAttempt();
         await widget.authService.register(
           email: _emailController.text,
           password: _passwordController.text,
@@ -1099,6 +1105,7 @@ setState(() {
         buttonText: context.strings.text('common.retry'),
       );
     } finally {
+      FirstTimeAppGuide.endRegistrationAttempt();
       if (mounted) setState(() => _submitting = false);
     }
   }
