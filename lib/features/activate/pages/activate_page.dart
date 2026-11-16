@@ -16,6 +16,7 @@ import '../data/activation_repository.dart';
 import '../widgets/tnum_activation_panel.dart';
 import '../../../core/services/functions_service.dart';
 import '../../wallet/pages/wallet_page.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 enum ActivationState { idle, finding, waiting, cancelling, received, failed }
 
@@ -247,6 +248,9 @@ class _ActivatePageState extends State<ActivatePage>
 
       try {
         await _showActivationNotice();
+        if (mounted && widget.isVisible) {
+          await FirstTimeAppGuide.showIfNeeded(context, 'activate');
+        }
       } finally {
         _showingActivationNotice = false;
       }

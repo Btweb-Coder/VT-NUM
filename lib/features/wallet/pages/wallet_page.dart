@@ -9,6 +9,7 @@ import '../../../core/services/wallet_repository.dart';
 import '../../../core/services/wallet_ledger_repository.dart';
 import '../data/payment_gateway_repository.dart';
 import '../data/top_up_repository.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key, this.openTopUpOnStart = false});
@@ -24,13 +25,12 @@ class _WalletPageState extends State<WalletPage> {
   void initState() {
     super.initState();
 
-    if (widget.openTopUpOnStart) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _showTopUpSheet();
-        }
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await FirstTimeAppGuide.showIfNeeded(context, 'wallet');
+      if (!mounted) return;
+      if (widget.openTopUpOnStart) await _showTopUpSheet();
+    });
   }
 
   final _topUps = TopUpRepository();
@@ -275,6 +275,8 @@ class _WalletPageState extends State<WalletPage> {
   }
 
 Future<void> _showTopUpSheet() async {
+  await FirstTimeAppGuide.showIfNeeded(context, 'topup');
+  if (!mounted) return;
   final preparingMessage =
       context.strings.text('wallet.preparing');
 

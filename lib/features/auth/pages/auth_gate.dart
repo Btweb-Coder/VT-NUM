@@ -8,6 +8,7 @@ import '../../../app/localization/app_localizations.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/colors.dart';
 import '../../../core/services/auth_service.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 enum _AlertType { success, error, info }
 
@@ -993,6 +994,22 @@ class _SignInPageState extends State<SignInPage> {
   bool _submitting = false;
   bool _obscurePassword = true;
   bool _acceptedTerms = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _prepareFirstTimeGuide();
+  }
+
+  Future<void> _prepareFirstTimeGuide() async {
+    if (!await FirstTimeAppGuide.isPending() || !mounted) return;
+    setState(() => _registering = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        FirstTimeAppGuide.showIfNeeded(context, 'auth');
+      }
+    });
+  }
 
   @override
   void dispose() {

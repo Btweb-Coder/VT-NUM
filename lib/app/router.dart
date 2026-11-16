@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'localization/app_localizations.dart';
@@ -12,6 +13,7 @@ import '../features/referrals/pages/referral_page.dart';
 import '../features/rentals/pages/rentals_page.dart';
 import '../features/support/pages/support_chat_page.dart';
 import '../core/services/catalog_bootstrap_service.dart';
+import '../features/onboarding/first_time_app_guide.dart';
 
 class AppRouter extends StatefulWidget {
   const AppRouter({super.key});
@@ -44,6 +46,10 @@ class _AppRouterState extends State<AppRouter> {
       const ActivePage(),
       const OrdersPage(),
     ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(FirstTimeAppGuide.showIfNeeded(context, 'home'));
+    });
   }
 
   void changePage(int index) {
@@ -58,6 +64,13 @@ class _AppRouterState extends State<AppRouter> {
         pages[1] = const ActivatePage(isVisible: false);
       }
     });
+
+    if (index == 2 || index == 3) {
+      final section = index == 2 ? 'active' : 'history';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(FirstTimeAppGuide.showIfNeeded(context, section));
+      });
+    }
   }
 
   void _openSupportChat() {
