@@ -1,0 +1,19 @@
+{
+  "countries": [
+    {
+      "providerCode": "170",
+      "isoCode": "",
+      "name": "",
+      "flag": "",
+      "source": "Official Proxnum country reference URL"
+    }
+  ],
+  "services": [
+    {
+      "providerCode": "",
+      "code": "",
+      "name": "",
+      "source": "Official Proxnum service reference URL"
+    }
+  ]
+}

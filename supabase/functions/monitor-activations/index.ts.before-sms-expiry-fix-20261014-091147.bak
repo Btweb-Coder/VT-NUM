@@ -1,0 +1,43 @@
+import { admin, ApiError, attempt, event, handle, json } from '../_shared/core.ts';
+import { cancel, status } from '../_shared/providers.ts';
+
+function cron(request: Request) { if (request.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) throw new ApiError(401,'CRON_UNAUTHORIZED'); }
+Deno.serve(handle(async request => {
+ cron(request); const db=admin(); const {data: lease,error:leaseError}=await db.rpc('claim_background_job',{p_job_name:'monitor-activations'}); if(leaseError) throw leaseError; if(!lease) return json({skipped:true,reason:'LEASE_HELD'}); const now=new Date().toISOString();
+ let failure: string|undefined;
+ try { const {data: orders,error}=await db.from('orders').select('*,providers(*)').in('status',['WAITING_FOR_SMS','EXPIRING','CANCELLING']).or(`next_monitor_at.is.null,next_monitor_at.lte.${now}`).limit(100); if(error) throw error;
+ for(const order of orders ?? []) { try {
+   const provider=order.providers; if(!provider) continue;
+   if(order.status==='WAITING_FOR_SMS' && new Date(order.expires_at).getTime()>Date.now()) {
+     const r=await status(provider,order.provider_activation_id); await db.from('provider_attempts').insert({order_id:order.id,provider_id:provider.id,action:'STATUS',status:r.ok?'SUCCESS':'FAILED',metadata:{rawStatus:r.raw,code:r.code},finished_at:now});
+     if(r.ok && r.status==='SMS_RECEIVED' && r.code) { await db.from('orders').update({status:'SMS_RECEIVED',code:r.code,sms_received_at:now}).eq('id',order.id).eq('status','WAITING_FOR_SMS'); await db.rpc('capture_wallet_hold',{p_order_id:order.id}); await db.from('orders').update({status:'COMPLETED',financial_status:'CAPTURED',completed_at:now}).eq('id',order.id).eq('status','SMS_RECEIVED'); await event(db,order.id,order.user_id,'ORDER_COMPLETED',provider.id,{codeReceived:true}); continue; }
+   }
+   if(order.status==='WAITING_FOR_SMS' && new Date(order.expires_at).getTime()<=Date.now()) await db.from('orders').update({status:'EXPIRING'}).eq('id',order.id).eq('status','WAITING_FOR_SMS');
+   const current=(await db.from('orders').select('status').eq('id',order.id).single()).data?.status;
+   if(['EXPIRING','CANCELLING'].includes(current)) {
+     const {data: latest}=await db.from('orders').select('*').eq('id',order.id).single();
+     if(!latest) continue;
+     await db.from('orders').update({status:'CANCELLING'}).eq('id',order.id).in('status',['EXPIRING','CANCELLING']);
+     let confirmed=latest.provider_cancellation_confirmed===true;
+     if(!confirmed) {
+       const result=await attempt(db,order.id,provider.id,'CANCEL',async()=>{try{return await cancel(provider,order.provider_activation_id)?{status:'SUCCESS'}:{status:'FAILED',errorCode:'PROVIDER_CANCEL_FAILED'};}catch(error){return {status:'FAILED',errorCode:'PROVIDER_CANCEL_EXCEPTION',errorMessage:error instanceof Error?error.message:'UNKNOWN'};}});
+       confirmed=result.status==='SUCCESS';
+       if(confirmed) await db.from('orders').update({provider_cancellation_confirmed:true}).eq('id',order.id);
+     }
+     if(confirmed) {
+       if(latest.financial_status==='HOLDING') {
+         const {error: releaseError}=await db.rpc('release_wallet_hold',{p_order_id:order.id});
+         if(releaseError) throw releaseError;
+         await db.from('orders').update({status:'EXPIRED',financial_status:'RELEASED',expired_at:now}).eq('id',order.id).eq('status','CANCELLING');
+         await event(db,order.id,order.user_id,'ORDER_EXPIRED',provider.id,{});
+       } else {
+         // A provider allocation that could not be funded is compensation-only;
+         // it must never become an expired customer activation.
+         await db.from('orders').update({status:'FAILED'}).eq('id',order.id).eq('status','CANCELLING');
+       }
+     }
+   }
+ } catch(error) { console.error('activation monitor',order.id,error); await db.from('orders').update({monitor_failures:(order.monitor_failures ?? 0)+1,last_monitor_error:error instanceof Error ? error.message : 'UNKNOWN',next_monitor_at:new Date(Date.now()+60_000).toISOString(),last_monitored_at:now}).eq('id',order.id); } }
+ return json({processed:orders?.length ?? 0});
+ } catch(error) { failure=error instanceof Error ? error.message : 'UNKNOWN'; throw error; } finally { await db.rpc('finish_background_job',{p_job_name:'monitor-activations',p_lease_id:lease,p_error:failure ?? null}); }
+}));

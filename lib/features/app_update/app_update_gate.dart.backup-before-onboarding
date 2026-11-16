@@ -1,0 +1,116 @@
+import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../core/services/app_update_service.dart';
+import '../auth/pages/auth_gate.dart';
+
+class AppUpdateGate extends StatefulWidget {
+  const AppUpdateGate({super.key});
+
+  @override
+  State<AppUpdateGate> createState() => _AppUpdateGateState();
+}
+
+class _AppUpdateGateState extends State<AppUpdateGate> {
+  late final Future<String> _installedVersion = _readInstalledVersion();
+
+  Future<String> _readInstalledVersion() async =>
+      (await PackageInfo.fromPlatform()).version;
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<String>(
+        future: _installedVersion,
+        builder: (context, versionSnapshot) {
+          if (versionSnapshot.connectionState != ConnectionState.done) {
+            return const _LoadingScreen();
+          }
+          // An inability to read the local package metadata must not lock a
+          // user out. A valid remote configuration is the only update gate.
+          if (versionSnapshot.hasError || !versionSnapshot.hasData) {
+            return AuthGate();
+          }
+          return StreamBuilder<AppUpdateInfo>(
+            stream: AppUpdateService().watch(),
+            builder: (context, updateSnapshot) {
+              // A configuration outage must not lock every existing user out.
+              // A valid, enabled backend configuration is what activates the gate.
+              final update = updateSnapshot.data;
+              if (update != null &&
+                  update.requiresUpdate(versionSnapshot.data!)) {
+                return _RequiredUpdateScreen(update: update);
+              }
+              return AuthGate();
+            },
+          );
+        },
+      );
+}
+
+class _LoadingScreen extends StatelessWidget {
+  const _LoadingScreen();
+
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: CircularProgressIndicator()));
+}
+
+class _RequiredUpdateScreen extends StatelessWidget {
+  const _RequiredUpdateScreen({required this.update});
+
+  final AppUpdateInfo update;
+
+  Future<void> _download(BuildContext context) async {
+    final uri = Uri.parse(update.downloadUrl);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible d’ouvrir le lien de mise à jour.'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => PopScope(
+        canPop: false,
+        child: Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.system_update, size: 64),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Mise à jour requise',
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'La version ${update.requiredVersion} est nécessaire pour continuer à utiliser l’application.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _download(context),
+                        icon: const Icon(Icons.download),
+                        label: const Text('METTRE À JOUR'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+}

@@ -1,0 +1,143 @@
+import { providerSecrets } from './core.ts';
+
+export type ProviderResult = {ok: true; activationId: string; phone: string; price: number; currency: string} | {ok: false; code: string; message?: string};
+type Provider = {id:string; slug:string; endpoint:string; config:Record<string, unknown>};
+const request = async (url: string, init: RequestInit) => { const c = new AbortController(); const t=setTimeout(()=>c.abort(),15000); try { const r=await fetch(url,{...init,signal:c.signal,headers:{Accept:'application/json','Content-Type':'application/json',...(init.headers ?? {})}}); const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(`PROVIDER_HTTP_${r.status}`); return j as Record<string,unknown>; } finally {clearTimeout(t);} };
+const str=(value:unknown)=>typeof value==='string'?value:'';
+const nested=(data:Record<string,unknown>, path:string):unknown=>path.split('.').reduce<unknown>((v,k)=>v && typeof v==='object' ? (v as Record<string,unknown>)[k] : undefined,data);
+
+export async function purchase(provider: Provider, serviceCode: string, countryCode: string): Promise<ProviderResult> {
+ const secrets=providerSecrets(provider.slug);
+ if(provider.slug==='proxnum') {
+  const data=await request(`${provider.endpoint}/api/v1/resell/virtual/buy`,{method:'POST',headers:{Authorization:`Bearer ${str(secrets.apiToken)}`},body:JSON.stringify({service:serviceCode,country:Number(countryCode)})});
+  const activation=data.activation as Record<string,unknown>|undefined; if(data.success!==true) return {ok:false,code:str(data.code)||'PROVIDER_ERROR',message:str(data.message)};
+  const id=str(activation?.activation_id), phone=str(activation?.phone), price=activation?.amount_paid; return id&&phone&&typeof price==='number'?{ok:true,activationId:id,phone,price,currency:'USD'}:{ok:false,code:'INVALID_PROVIDER_RESPONSE'};
+ }
+ if(provider.slug==='codasms') {
+  const api=(provider.config.api ?? {}) as Record<string,unknown>; const path=str(api.purchasePath); if(!path) throw new Error('MISSING_CODASMS_API_CONFIG');
+  const data=await request(new URL(path,provider.endpoint).toString(),{method:str(api.purchaseMethod)||'POST',headers:{Authorization:`Bearer ${str(secrets.apiToken)}`},body:JSON.stringify({serviceId:serviceCode,countryId:countryCode,...(api.staticBody as Record<string,unknown> ?? {})})});
+  if(nested(data,str(api.successField)||'success')!==true)return {ok:false,code:str(nested(data,str(api.errorCodeField)||'code'))||'PROVIDER_ERROR'};
+  const id=nested(data,str(api.activationIdField)||'activation.id'),phone=nested(data,str(api.phoneNumberField)||'activation.phone'),price=nested(data,str(api.priceField)||'activation.price');
+  return typeof id==='string'&&typeof phone==='string'&&typeof price==='number'?{ok:true,activationId:id,phone,price,currency:str(api.currency)||'USD'}:{ok:false,code:'INVALID_PROVIDER_RESPONSE'};
+ }
+ return {ok:false,code:'UNKNOWN_PROVIDER'};
+}
+
+export async function status(provider: Provider, activationId: string) {
+  const secrets = providerSecrets(provider.slug);
+
+  if (provider.slug === 'proxnum') {
+    const d = await request(
+      `${provider.endpoint}/api/v1/resell/virtual/${encodeURIComponent(activationId)}/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${str(secrets.apiToken)}`,
+        },
+      },
+    );
+
+    const raw = str(d.status).toUpperCase();
+    const code = str(d.code).trim();
+
+    // Never treat a code alone as proof that an SMS was received.
+    if (d.success !== true) {
+      return {
+        ok: false,
+        status: 'WAITING',
+        code: '',
+        raw,
+      };
+    }
+
+    if (raw === 'COMPLETED') {
+      return {
+        ok: true,
+        status: code ? 'SMS_RECEIVED' : 'COMPLETED',
+        code,
+        raw,
+      };
+    }
+
+    if (raw === 'CANCELLED' || raw === 'CANCELED') {
+      return { ok: true, status: 'CANCELLED', code: '', raw };
+    }
+
+    if (raw === 'EXPIRED') {
+      return { ok: true, status: 'EXPIRED', code: '', raw };
+    }
+
+    return { ok: true, status: 'WAITING', code: '', raw };
+  }
+
+  const api = (provider.config.api ?? {}) as Record<string, unknown>;
+  const path = str(api.statusPath);
+  const d = await request(new URL(path, provider.endpoint).toString(), {
+    method: str(api.statusMethod) || 'POST',
+    headers: {
+      Authorization: `Bearer ${str(secrets.apiToken)}`,
+    },
+    body: JSON.stringify({ providerActivationId: activationId }),
+  });
+
+  const raw = str(nested(d, str(api.statusField) || 'status')).toUpperCase();
+
+  return {
+    ok: nested(d, str(api.successField) || 'success') === true,
+    status: ['SMS_RECEIVED', 'COMPLETED', 'CANCELLED', 'EXPIRED'].includes(raw)
+      ? raw
+      : 'WAITING',
+    code: str(nested(d, str(api.codeField) || 'code')),
+    raw,
+  };
+}
+
+
+export async function cancel(provider: Provider, activationId: string) {
+  const secrets = providerSecrets(provider.slug);
+
+  if (provider.slug === 'proxnum') {
+    const d = await request(
+      `${provider.endpoint}/api/v1/resell/virtual/cancel`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${str(secrets.apiToken)}`,
+        },
+        body: JSON.stringify({ activation_id: activationId }),
+      },
+    );
+
+    // Only the provider's explicit acceptance confirms cancellation.
+    if (d.success === true && d.code === 'cancel_accepted') {
+      return true;
+    }
+
+    if (d.success === false && d.code === 'cancel_rejected') {
+      return false;
+    }
+
+    // Unexpected responses must not be treated as a confirmed cancellation.
+    throw new Error('PROVIDER_CANCEL_UNCERTAIN');
+  }
+
+  const api = (provider.config.api ?? {}) as Record<string, unknown>;
+  const path = str(api.cancelPath);
+
+  if (!path) {
+    throw new Error('MISSING_PROVIDER_CANCEL_CONFIG');
+  }
+
+  const d = await request(
+    new URL(path, provider.endpoint).toString(),
+    {
+      method: str(api.cancelMethod) || 'POST',
+      headers: {
+        Authorization: `Bearer ${str(secrets.apiToken)}`,
+      },
+      body: JSON.stringify({ providerActivationId: activationId }),
+    },
+  );
+
+  return nested(d, str(api.successField) || 'success') === true;
+}
+

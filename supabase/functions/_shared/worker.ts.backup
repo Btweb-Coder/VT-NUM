@@ -1,0 +1,149 @@
+import { createClient } from "npm:@supabase/supabase-js@2.57.0";
+import { provider, providerKey } from "./common.ts";
+const admin = () =>
+  createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false } },
+  );
+function smsRows(msg: unknown, activationId: string) {
+  const list = Array.isArray(msg)
+    ? msg
+    : (typeof msg === "string" && msg.trim() ? [{ text: msg }] : []);
+  return list.map((m, i) => {
+    const row = typeof m === "string"
+      ? { text: m }
+      : m as Record<string, unknown>;
+    const text = String(row.text ?? row.msg ?? row.message ?? "");
+    const date = String(row.time ?? row.date ?? i);
+    return {
+      activation_id: activationId,
+      provider_message_key: `${date}:${text}`,
+      message_text: text,
+      code: text || null,
+    };
+  }).filter((x) => x.message_text.length > 0);
+}
+export async function runWorker(mode: "monitor" | "deadlines" = "monitor") {
+  providerKey();
+  const db = admin();
+  const now = new Date().toISOString();
+  const { data: ops, error } = await db.from("activations").select(
+    "id,user_id,status,provider_operation_id,provider_status,phone_number,deadline_at,service_slug,country_code,cancellation_state,provider_terminal_at,completed_at",
+  ).not("provider_operation_id", "is", null).not(
+    "status",
+    "in",
+    "(completed,expired,cancelled,failed)",
+  ).limit(100);
+  if (error) throw error;
+  let providerRows: Record<string, unknown>[] = [];
+  {
+    let result: unknown;
+    try {
+      result = await provider("getState", {
+        msg_list: 1,
+        message_to_code: 1,
+        orderby: "asc",
+        lang: "en",
+      });
+    } catch (error) {
+      if (
+        !(error instanceof Error) ||
+        error.message !== "PROVIDER_ERROR_NO_OPERATIONS"
+      ) throw error;
+      result = [];
+    }
+    if (Array.isArray(result)) {
+      providerRows = result as Record<string, unknown>[];
+    } else if (result && typeof result === "object") {
+      const wrappedArrays = Object.values(result).filter(Array.isArray);
+      if (wrappedArrays.length !== 1) {
+        throw new Error("PROVIDER_INVALID_RESPONSE");
+      }
+      providerRows = wrappedArrays[0] as Record<string, unknown>[];
+    } else {
+      throw new Error("PROVIDER_INVALID_RESPONSE");
+    }
+  }
+  const byId = new Map(providerRows.map((x) => [String(x.tzid), x]));
+  for (const a of ops ?? []) {
+    const tzid = String(a.provider_operation_id);
+    const state = byId.get(tzid);
+    if (state) {
+      const messages = smsRows(state.msg, a.id);
+      if (messages.length) {
+        await db.from("activation_sms").upsert(messages, {
+          onConflict: "activation_id,provider_message_key",
+          ignoreDuplicates: true,
+        });
+      }
+      const providerStatus = String(state.response ?? "");
+      let status: string = a.status;
+      if (
+        a.status !== "completion_pending" &&
+        (messages.length || providerStatus === "TZ_NUM_ANSWER")
+      ) {
+        status = "sms_received";
+      }
+      let cancellationState = undefined;
+      let terminalAt = undefined;
+      if (providerStatus === "TZ_OVER_OK") {
+        status = "completed";
+        terminalAt = now;
+        const { error } = await db.rpc("capture_activation_reservation", {
+          p_activation: a.id,
+        });
+        if (error) throw error;
+        await db.from("provider_operations").update({
+          operation: "close",
+          state: "confirmed",
+          updated_at: now,
+        }).eq("activation_id", a.id);
+      } else if (providerStatus === "TZ_OVER_EMPTY") {
+        status = "expiration_pending";
+        cancellationState = "not_supported";
+      } else if (
+        providerStatus === "TZ_NUM_WAIT" || providerStatus === "TZ_INPOOL"
+      ) {
+        if (a.status === "active" || a.status === "sms_received") {
+          status = messages.length || a.status === "sms_received"
+            ? "sms_received"
+            : "active";
+        }
+      }
+      await db.from("activations").update({
+        status,
+        provider_status: providerStatus,
+        last_provider_check_at: now,
+        phone_number: state.number ?? a.phone_number,
+        cancellation_state: cancellationState ?? a.cancellation_state,
+        provider_terminal_at: terminalAt ?? a.provider_terminal_at,
+        completed_at: status === "completed" ? now : a.completed_at,
+      }).eq("id", a.id);
+    }
+    if (
+      mode === "deadlines" && new Date(a.deadline_at).getTime() <= Date.now() &&
+      !["expiration_pending", "completed"].includes(String(a.status))
+    ) {
+      // The official v1.1 API documents setOperationOk as closing an operation, not
+      // cancelling it with confirmed refund semantics. Never substitute it here.
+      await db.from("activations").update({
+        status: "expiration_pending",
+        cancellation_state: "not_supported",
+        failure_code: "PROVIDER_CANCELLATION_UNVERIFIED",
+        last_provider_check_at: now,
+      }).eq("id", a.id);
+      console.warn(
+        JSON.stringify({
+          activation_id: a.id,
+          event: "deadline_unresolved_provider_cancellation_unverified",
+        }),
+      );
+    }
+  }
+  // Uncertain purchases without tzid are retained and never blindly retried.
+  return {
+    checked: ops?.length ?? 0,
+    provider_operations: providerRows.length,
+  };
+}

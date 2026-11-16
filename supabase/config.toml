@@ -1,0 +1,94 @@
+project_id = "mvvmdiabzkcywjvkffgr"
+
+[functions.replace-activation]
+verify_jwt = true
+
+[functions.request-activation]
+verify_jwt = true
+
+[functions.cancel-activation]
+verify_jwt = true
+
+[functions.start-top-up]
+verify_jwt = true
+
+[functions.refresh-top-up]
+verify_jwt = true
+
+[functions.bootstrap-account]
+verify_jwt = true
+
+[functions.record-operation]
+verify_jwt = true
+
+[functions.monitor-activations]
+verify_jwt = false
+
+[functions.monitor-topups]
+verify_jwt = false
+
+[functions.proxnum-rentals]
+verify_jwt = true
+
+[functions.monitor-proxnum-rentals]
+verify_jwt = false
+
+[functions.payment-webhook]
+verify_jwt = false
+
+[functions.tnum-bootstrap-account]
+verify_jwt = true
+
+[functions.tnum-get-activation-catalog]
+verify_jwt = true
+
+[functions.tnum-refresh-activation-catalog]
+verify_jwt = true
+
+[functions.tnum-get-activation-quote]
+verify_jwt = true
+
+[functions.tnum-request-activation]
+verify_jwt = true
+
+[functions.tnum-get-wallet]
+verify_jwt = true
+
+[functions.tnum-get-current-activations]
+verify_jwt = true
+
+[functions.tnum-get-activation-history]
+verify_jwt = true
+
+[functions.tnum-get-activation-details]
+verify_jwt = true
+
+[functions.tnum-poll-activation-updates]
+verify_jwt = true
+
+[functions.tnum-request-next-sms]
+verify_jwt = true
+
+[functions.tnum-complete-activation]
+verify_jwt = true
+
+[functions.tnum-monitor-activations]
+verify_jwt = false
+
+[functions.tnum-process-activation-deadlines]
+verify_jwt = false
+
+[functions.tnum-process-cancellation-retries]
+verify_jwt = false
+
+[functions.tnum-process-provider-poll-jobs]
+verify_jwt = false
+
+[functions.tnum-reconcile-provider-operations]
+verify_jwt = false
+
+[functions.tnum-diagnose-onlinesim]
+verify_jwt = false
+
+[functions.get-operation-history]
+verify_jwt = true

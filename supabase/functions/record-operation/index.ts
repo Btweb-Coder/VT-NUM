@@ -1,0 +1,2 @@
+import { admin, authenticatedUser, body, handle, json, requiredString, ApiError } from '../_shared/core.ts';
+Deno.serve(handle(async request => { const user=await authenticatedUser(request,false); const data=await body(request); const action=requiredString(data,'action').slice(0,80); const outcome=data.outcome; if(outcome!=='SUCCESS'&&outcome!=='FAILURE') throw new ApiError(400,'INVALID_EVENT'); const {error}=await admin().from('operation_events').insert({user_id:user.id,action,outcome,metadata:{source:'MOBILE'}}); if(error) throw error; return json({success:true}); }));

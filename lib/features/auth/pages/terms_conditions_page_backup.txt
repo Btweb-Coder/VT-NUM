@@ -1,0 +1,150 @@
+# CONDITIONS GÉNÉRALES D'UTILISATION
+## VT NUM
+
+### Article 1 — Objet et champ d'application
+
+Les présentes Conditions générales d'utilisation, ci-après dénommées « CGU », définissent les règles d'accès et d'utilisation de VT NUM, une application proposant notamment des services de consultation et de location de numéros de téléphone virtuels.
+
+Elles s'appliquent à toute personne qui crée un compte, accède à l'application ou utilise les services proposés.
+
+L'utilisateur est tenu de prendre connaissance des présentes conditions avant de finaliser son inscription. Leur acceptation constitue une condition préalable à la création d'un compte.
+
+### Article 2 — Nature des services
+
+VT NUM met à la disposition de ses utilisateurs des fonctionnalités permettant notamment de consulter les numéros disponibles, de louer des numéros virtuels et de suivre les opérations associées, selon les services proposés dans l'application.
+
+La disponibilité d'un numéro dépend notamment de l'offre disponible, des caractéristiques du service demandé, des réseaux de télécommunication et des conditions techniques applicables.
+
+VT NUM ne garantit pas qu'un numéro sera compatible avec toutes les applications, plateformes ou procédures de vérification externes.
+
+### Article 3 — Utilisation légale et responsable
+
+Les numéros fournis par VT NUM doivent être utilisés à des fins légales, légitimes et responsables.
+
+Chaque utilisateur s'engage à respecter les lois et règlements applicables, les droits des tiers, les présentes CGU ainsi que les conditions d'utilisation des plateformes sur lesquelles il choisit d'utiliser un numéro.
+
+L'accès à un numéro virtuel ne confère aucun droit particulier permettant de contourner les règles d'une plateforme tierce, d'obtenir un accès non autorisé à un service ou de porter atteinte aux droits d'une autre personne.
+
+### Article 4 — Activités interdites
+
+Il est strictement interdit d'utiliser VT NUM ou les numéros mis à disposition pour :
+
+- Commettre, faciliter ou tenter de commettre une fraude, une escroquerie ou une usurpation d'identité.
+- Menacer, harceler, intimider, tromper ou porter atteinte à autrui.
+- Envoyer des communications abusives, du spam ou des messages non sollicités en violation des règles applicables.
+- Créer ou exploiter des comptes dans un but frauduleux ou pour contourner les restrictions légitimes d'une plateforme.
+- Contourner des mécanismes de sécurité ou de vérification à des fins illicites.
+- Faciliter une activité criminelle ou toute autre activité interdite par la législation applicable.
+- Utiliser les services d'une manière susceptible de compromettre la sécurité, la disponibilité ou l'intégrité de VT NUM.
+
+Cette liste n'est pas exhaustive. Tout usage illégal, abusif ou contraire aux présentes CGU est susceptible d'entraîner des mesures appropriées.
+
+### Article 5 — Responsabilité de l'utilisateur
+
+L'utilisateur demeure responsable des actions qu'il réalise au moyen des numéros fournis par VT NUM, notamment des messages envoyés, des comptes créés, des inscriptions effectuées et des services tiers utilisés.
+
+Il lui appartient de vérifier que son utilisation est autorisée et conforme aux lois applicables ainsi qu'aux règles des plateformes concernées.
+
+VT NUM ne cautionne ni n'autorise les activités frauduleuses, abusives ou illégales réalisées par ses utilisateurs.
+
+Dans les limites permises par la législation applicable, VT NUM ne saurait être tenu responsable des actes personnels, illégaux ou abusifs d'un utilisateur, ni des conséquences résultant de décisions prises indépendamment par une plateforme tierce.
+
+Le présent article ne supprime ni ne limite les responsabilités qui incombent légalement à VT NUM.
+
+### Article 6 — Disponibilité et limites techniques
+
+VT NUM s'efforce de proposer un service fiable. Toutefois, aucune disponibilité permanente ne peut être garantie.
+
+La réception des SMS, la délivrance des codes, la durée de disponibilité d'un numéro et la compatibilité avec un service tiers peuvent dépendre de facteurs techniques ou de décisions externes échappant au contrôle direct de VT NUM.
+
+Une plateforme tierce peut notamment refuser un numéro virtuel, modifier ses mécanismes de vérification ou restreindre l'accès à ses propres services.
+
+VT NUM ne garantit donc ni la réception systématique de tous les messages ni l'acceptation de chaque numéro par une application tierce.
+
+### Article 7 — Tarification et politique commerciale
+
+VT NUM détermine les tarifs applicables à ses services conformément à sa politique commerciale et à ses règles internes de tarification.
+
+Les prix présentés dans l'application sont établis selon les critères applicables au service concerné, lesquels peuvent notamment inclure le pays, la destination, l'application visée, la durée de location, la disponibilité du numéro et les caractéristiques de l'offre.
+
+VT NUM se réserve le droit de modifier, d'ajuster ou d'actualiser ses tarifs à tout moment, sans devoir obtenir une autorisation individuelle de chaque utilisateur pour chaque changement, sous réserve des dispositions légales applicables.
+
+Les tarifs applicables à une opération sont ceux déterminés conformément aux règles de tarification en vigueur et aux informations présentées au moment de la confirmation de cette opération.
+
+Une modification tarifaire ultérieure ne modifie pas automatiquement et rétroactivement le montant d'une opération déjà confirmée.
+
+### Article 8 — Intégrité financière et protection du système
+
+VT NUM met en œuvre des contrôles destinés à préserver la cohérence des tarifs, l'exactitude des montants facturés, la sécurité des transactions et l'intégrité de son système financier.
+
+Toute tentative de manipulation des prix, de contournement des règles de facturation, d'exploitation d'une anomalie technique, de fraude au paiement ou de double utilisation abusive d'une opération est interdite.
+
+En présence d'une erreur manifeste, d'une anomalie technique ou d'une opération suspecte, VT NUM peut procéder aux vérifications nécessaires et prendre les mesures raisonnables destinées à protéger les utilisateurs, les transactions et l'intégrité de la plateforme, dans les limites autorisées par la législation applicable.
+
+Aucune mesure de contrôle ne doit être interprétée comme une autorisation de modifier arbitrairement une opération confirmée ou de priver un utilisateur de droits que la loi lui reconnaît.
+
+### Article 9 — Paiements, annulations et remboursements
+
+L'utilisateur doit vérifier le service sélectionné, les conditions applicables et le montant demandé avant de confirmer une opération.
+
+Une transaction peut rester en attente lorsqu'une confirmation technique ou financière est nécessaire. Dans cette situation, l'utilisateur est invité à consulter le statut de l'opération avant de tenter un nouveau paiement.
+
+Les annulations, remboursements et régularisations sont examinés selon la nature de l'opération, son statut réel, les vérifications disponibles, les conditions applicables au service et les obligations légales.
+
+Un remboursement ne doit pas être considéré comme automatiquement acquis du seul fait qu'un utilisateur en fait la demande. Toute demande est examinée au regard des circonstances et des règles applicables.
+
+De même, aucune somme ne doit être considérée comme définitivement perdue ou remboursée sans tenir compte de l'état réel de la transaction et des vérifications nécessaires.
+
+### Article 10 — Services et plateformes tiers
+
+VT NUM peut proposer des numéros destinés à être utilisés sur des plateformes exploitées par des tiers.
+
+Ces plateformes restent responsables de leurs propres services, de leurs conditions d'utilisation, de leurs décisions d'acceptation ou de refus des numéros et de leurs mécanismes de sécurité.
+
+L'utilisateur est tenu de respecter les conditions applicables à ces services tiers.
+
+VT NUM ne garantit pas qu'une plateforme externe acceptera un numéro donné ou maintiendra sa compatibilité dans le temps.
+
+### Article 11 — Sécurité et utilisation du compte
+
+L'utilisateur s'engage à fournir des informations exactes lors de son inscription et à protéger ses identifiants de connexion.
+
+Il lui appartient de prendre les précautions nécessaires pour empêcher l'utilisation non autorisée de son compte et de signaler tout incident de sécurité dont il a connaissance.
+
+Toute utilisation d'un compte destinée à commettre une fraude, à contourner les présentes CGU ou à porter atteinte à la sécurité de VT NUM est interdite.
+
+### Article 12 — Suspension et restriction d'accès
+
+En cas de violation des présentes CGU, de suspicion raisonnable de fraude, d'utilisation abusive, de risque pour la sécurité ou d'obligation légale, VT NUM peut prendre les mesures nécessaires et proportionnées pour protéger ses services.
+
+Ces mesures peuvent notamment comprendre la limitation de certaines fonctionnalités ou la suspension de l'accès à un compte, dans les limites autorisées par la législation applicable.
+
+Lorsque cela est approprié et juridiquement possible, l'utilisateur pourra être informé de la mesure prise et des démarches disponibles pour demander un réexamen.
+
+### Article 13 — Modification des conditions
+
+VT NUM se réserve le droit de modifier, compléter, actualiser ou remplacer les présentes CGU à tout moment, notamment pour tenir compte de l'évolution de ses services, de ses fonctionnalités, de ses mesures de sécurité, de sa politique commerciale ou de ses obligations légales.
+
+Ces modifications peuvent être publiées dans l'application ou par tout autre moyen approprié. VT NUM n'est pas tenu de solliciter un nouvel accord individuel pour chaque modification lorsque la législation applicable ne l'exige pas.
+
+Il appartient à l'utilisateur de consulter les conditions en vigueur.
+
+Lorsque la loi impose une notification particulière ou un consentement exprès pour une modification déterminée, VT NUM appliquera les exigences correspondantes.
+
+Aucune disposition du présent article ne permet d'écarter les droits impératifs des utilisateurs ou les obligations légales de VT NUM.
+
+### Article 14 — Contact et assistance
+
+Pour toute question concernant les présentes CGU, l'utilisation d'un numéro ou une opération effectuée dans l'application, l'utilisateur peut contacter VT NUM par les moyens de contact officiellement mis à disposition dans l'application.
+
+### Article 15 — Acceptation des conditions
+
+Avant de finaliser son inscription, l'utilisateur doit pouvoir consulter les présentes CGU et manifester explicitement son acceptation au moyen de la case prévue à cet effet.
+
+Cette acceptation est obligatoire pour créer un compte VT NUM.
+
+En cochant cette case, l'utilisateur reconnaît avoir eu la possibilité de lire les présentes conditions, comprendre les règles essentielles d'utilisation du service et s'engager à les respecter.
+
+L'acceptation initiale ne signifie pas qu'un nouvel accord individuel sera nécessaire pour chaque modification des tarifs ou des conditions lorsque la loi ne l'exige pas.
+
+Les présentes CGU sont soumises aux dispositions légales applicables.
