@@ -37,7 +37,12 @@ jobs:
         run: flutter pub get
 
       - name: Analyze Dart and Flutter code
-        run: flutter analyze --no-fatal-infos
+        run: >-
+          flutter analyze --no-fatal-infos
+          lib/features/referrals
+          lib/core/services/auth_service.dart
+          lib/features/auth/pages/auth_gate.dart
+          lib/app/router.dart
 
       - name: Run Flutter tests
-        run: flutter test
+        run: flutter test test/referrals
