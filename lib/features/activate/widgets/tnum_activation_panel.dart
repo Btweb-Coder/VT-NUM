@@ -12,6 +12,7 @@ import '../data/tnum_repository.dart';
 import '../../orders/pages/tnum_operation_details_page.dart';
 import '../../wallet/pages/wallet_page.dart';
 import 'tnum_feedback.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 class TnumActivationPanel extends StatefulWidget {
   const TnumActivationPanel({
@@ -422,28 +423,44 @@ class _TnumActivationPanelState extends State<TnumActivationPanel> {
           children: [
             _buildHeader(),
             const SizedBox(height: 28),
-            _buildSelectorSection(
-              label: context.strings.text('tnum.service'),
-              value:
-                  _selectedItem?.serviceName ??
-                  context.strings.text('tnum.search'),
-              leading: Icon(
-                _serviceIcon(_selectedItem?.serviceName ?? ''),
-                color: const Color(0xFF93B4FF),
+            FirstTimeAppGuide.anchor(
+              'activate',
+              'T-NUM: COUNTRY AND SERVICE',
+              Column(
+                children: [
+                  _buildSelectorSection(
+                    label: context.strings.text('tnum.service'),
+                    value:
+                        _selectedItem?.serviceName ??
+                        context.strings.text('tnum.search'),
+                    leading: Icon(
+                      _serviceIcon(_selectedItem?.serviceName ?? ''),
+                      color: const Color(0xFF93B4FF),
+                    ),
+                    onTap: _showServiceSheet,
+                  ),
+                  const SizedBox(height: 22),
+                  _buildSelectorSection(
+                    label: context.strings.text('tnum.country'),
+                    value: _selectedCountryName,
+                    leading: _countryFlag(_selectedCountry),
+                    onTap: _showCountrySheet,
+                  ),
+                ],
               ),
-              onTap: _showServiceSheet,
             ),
             const SizedBox(height: 22),
-            _buildSelectorSection(
-              label: context.strings.text('tnum.country'),
-              value: _selectedCountryName,
-              leading: _countryFlag(_selectedCountry),
-              onTap: _showCountrySheet,
+            FirstTimeAppGuide.anchor(
+              'activate',
+              'T-NUM: PRICE AND PURCHASE',
+              Column(
+                children: [
+                  _buildPriceCard(),
+                  const SizedBox(height: 22),
+                  _buildPurchaseButton(),
+                ],
+              ),
             ),
-            const SizedBox(height: 22),
-            _buildPriceCard(),
-            const SizedBox(height: 22),
-            _buildPurchaseButton(),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.all(24),
