@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -171,8 +172,8 @@ class FirstTimeAppGuide {
         return const [
           _GuideStep('ACCOUNT ENTRY', 'ACCÈS AU COMPTE',
             'Welcome to VT-NUM', 'Bienvenue sur VT-NUM',
-            'If this is your first account, stay on Create account. If you already have an account, use the Log in option at the bottom.',
-            'Pour créer votre premier compte, restez sur Créer un compte. Si vous avez déjà un compte, utilisez Se connecter en bas.'),
+            'If this is your first account, stay on Create account. If you already have an account, finish or skip this guide, then choose Log in at the bottom.',
+            'Pour créer votre premier compte, restez sur Créer un compte. Si vous avez déjà un compte, terminez ou ignorez ce guide, puis choisissez Se connecter en bas.'),
           _GuideStep('EMAIL FIELD', 'CHAMP E-MAIL',
             'Enter your email', 'Entrez votre e-mail',
             'Type an email address you can open. Check that it is correct because account instructions may be sent there.',
@@ -275,8 +276,8 @@ class FirstTimeAppGuide {
             allowTargetInteraction: false),
           _GuideStep('SMS / VERIFICATION CODE', 'SMS / CODE DE VÉRIFICATION',
             'Copy the SMS code', 'Copiez le code SMS',
-            'When the SMS arrives, open the operation details after the guide. Use the copy control and paste the code into the app or website that requested it.',
-            'À l’arrivée du SMS, ouvrez les détails de l’opération après le guide. Utilisez le bouton de copie et collez le code dans l’application ou le site qui l’a demandé.',
+            'When the SMS arrives, its code appears on the VT-NUM card or in T-NUM operation details. Use the copy control and paste the code into the app or website that requested it.',
+            'À l’arrivée du SMS, le code apparaît sur la carte VT-NUM ou dans les détails de l’opération T-NUM. Utilisez le bouton de copie et collez le code dans l’application ou le site qui l’a demandé.',
             allowTargetInteraction: false),
           _GuideStep('AVAILABLE ACTIONS', 'ACTIONS DISPONIBLES',
             'Follow the operation', 'Suivez l’opération',
@@ -535,13 +536,26 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
     final progress = (_index + 1) / widget.steps.length;
     final count = (_index + 1).toString() + '/' + widget.steps.length.toString();
     final bubbleWidth = size.width < 480 ? size.width - 28 : 440.0;
-    final bubbleHeight = (size.height - 24).clamp(120.0, 390.0).toDouble();
     final targetRect = _targetReady ? _targetRect : null;
+    final availableBelow = targetRect == null
+        ? size.height - 16
+        : size.height - targetRect.bottom - 26;
+    final availableAbove = targetRect == null
+        ? size.height - 16
+        : targetRect.top - 26;
+    final placeBelow = targetRect == null || availableBelow >= availableAbove;
+    final availableHeight = targetRect == null
+        ? size.height - 16
+        : math.max(availableBelow, availableAbove);
+    final bubbleHeight = math
+        .min(390.0, math.max(100.0, availableHeight))
+        .clamp(100.0, math.max(100.0, size.height - 16))
+        .toDouble();
 
     double bubbleTop;
     if (targetRect == null) {
       bubbleTop = (size.height - bubbleHeight) / 2;
-    } else if (targetRect.bottom + bubbleHeight + 18 < size.height) {
+    } else if (placeBelow) {
       bubbleTop = targetRect.bottom + 18;
     } else {
       bubbleTop = targetRect.top - bubbleHeight - 18;
