@@ -14,6 +14,16 @@ class FirstTimeAppGuide {
     'auth', 'home', 'activate', 'active', 'history', 'topup',
   ];
   static final Set<String> _showing = <String>{};
+  static final Map<String, GlobalKey> _anchorKeys = <String, GlobalKey>{};
+
+  /// Stable anchors shared by the app screens and the first-time guide.
+  static GlobalKey anchorKey(String section, String target) {
+    final id = '$section::$target';
+    return _anchorKeys.putIfAbsent(
+      id,
+      () => GlobalKey(debugLabel: 'first-time-guide-$id'),
+    );
+  }
   static Completer<void>? _registrationCompletion;
 
   static String _doneKey(String section) =>
@@ -110,15 +120,11 @@ class FirstTimeAppGuide {
 
       final french =
           Localizations.localeOf(context).languageCode.toLowerCase() == 'fr';
-      final result = await showDialog<_GuideResult>(
-        context: context,
-        barrierDismissible: false,
-        barrierColor: Colors.black.withValues(alpha: 0.78),
-        builder: (_) => _GuideDialog(
-          section: section,
-          french: french,
-          steps: _steps(section),
-        ),
+      final result = await _showSpotlightGuide(
+        context,
+        section: section,
+        french: french,
+        steps: _steps(section),
       );
 
       if (result == _GuideResult.skipAll) {
@@ -311,22 +317,129 @@ class _GuideStep {
 
 enum _GuideResult { finished, skipAll }
 
-class _GuideDialog extends StatefulWidget {
-  const _GuideDialog({
+Future<_GuideResult?> _showSpotlightGuide(
+  BuildContext context, {
+  required String section,
+  required bool french,
+  required List<_GuideStep> steps,
+}) {
+  final overlay = Overlay.of(context, rootOverlay: true);
+  final completion = Completer<_GuideResult?>();
+  late final OverlayEntry entry;
+  entry = OverlayEntry(
+    builder: (overlayContext) => _SpotlightGuideOverlay(
+      section: section,
+      french: french,
+      steps: steps,
+      onComplete: (result) {
+        if (!completion.isCompleted) completion.complete(result);
+        entry.remove();
+      },
+    ),
+  );
+  overlay.insert(entry);
+  return completion.future;
+}
+
+class _SpotlightGuideOverlay extends StatefulWidget {
+  const _SpotlightGuideOverlay({
     required this.section,
     required this.french,
     required this.steps,
+    required this.onComplete,
   });
+
   final String section;
   final bool french;
   final List<_GuideStep> steps;
+  final ValueChanged<_GuideResult> onComplete;
 
   @override
-  State<_GuideDialog> createState() => _GuideDialogState();
+  State<_SpotlightGuideOverlay> createState() => _SpotlightGuideOverlayState();
 }
 
-class _GuideDialogState extends State<_GuideDialog> {
+class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
   int _index = 0;
+  Rect? _targetRect;
+  bool _targetReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focusCurrentStep());
+  }
+
+  Future<void> _focusCurrentStep() async {
+    if (!mounted || widget.steps.isEmpty) return;
+
+    final step = widget.steps[_index];
+    final key = FirstTimeAppGuide.anchorKey(widget.section, step.targetEn);
+    final targetContext = key.currentContext;
+
+    if (targetContext != null) {
+      try {
+        await Scrollable.ensureVisible(
+          targetContext,
+          duration: const Duration(milliseconds: 360),
+          curve: Curves.easeInOutCubic,
+          alignment: 0.32,
+        );
+      } catch (_) {
+        // A target may not be inside a scrollable; its current position is valid.
+      }
+    }
+
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    Rect? rect;
+    final currentContext = key.currentContext;
+    if (currentContext != null) {
+      final targetObject = currentContext.findRenderObject();
+      final overlayObject = Overlay.of(
+        context,
+        rootOverlay: true,
+      ).context.findRenderObject();
+
+      if (targetObject is RenderBox &&
+          targetObject.hasSize &&
+          overlayObject is RenderBox) {
+        final topLeft = targetObject.localToGlobal(
+          Offset.zero,
+          ancestor: overlayObject,
+        );
+        rect = topLeft & targetObject.size;
+      }
+    }
+
+    setState(() {
+      _targetRect = rect;
+      _targetReady = true;
+    });
+  }
+
+  void _next() {
+    if (_index >= widget.steps.length - 1) {
+      widget.onComplete(_GuideResult.finished);
+      return;
+    }
+    setState(() {
+      _index++;
+      _targetReady = false;
+      _targetRect = null;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focusCurrentStep());
+  }
+
+  void _back() {
+    if (_index == 0) return;
+    setState(() {
+      _index--;
+      _targetReady = false;
+      _targetRect = null;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focusCurrentStep());
+  }
 
   String get _sectionTitle {
     final fr = widget.french;
@@ -341,206 +454,299 @@ class _GuideDialogState extends State<_GuideDialog> {
     };
   }
 
-  void _next() {
-    if (_index < widget.steps.length - 1) {
-      setState(() => _index++);
-    } else {
-      Navigator.of(context).pop(_GuideResult.finished);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.steps.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) Navigator.of(context).pop(_GuideResult.finished);
+        if (mounted) widget.onComplete(_GuideResult.finished);
       });
       return const SizedBox.shrink();
     }
 
+    final size = MediaQuery.sizeOf(context);
     final step = widget.steps[_index];
     final target = widget.french ? step.targetFr : step.targetEn;
     final title = widget.french ? step.titleFr : step.titleEn;
     final body = widget.french ? step.bodyFr : step.bodyEn;
     final progress = (_index + 1) / widget.steps.length;
     final count = (_index + 1).toString() + '/' + widget.steps.length.toString();
+    final bubbleWidth = size.width < 480 ? size.width - 28 : 440.0;
+    final bubbleHeight = (size.height - 32).clamp(260.0, 390.0);
+    final targetRect = _targetReady ? _targetRect : null;
 
-    return PopScope(
-      canPop: false,
-      child: Dialog(
-        backgroundColor: const Color(0xFF101A31),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(26),
-          side: BorderSide(
-            color: const Color(0xFF7199FF).withValues(alpha: 0.38),
+    double bubbleTop;
+    if (targetRect == null) {
+      bubbleTop = (size.height - bubbleHeight) / 2;
+    } else if (targetRect.bottom + bubbleHeight + 18 < size.height) {
+      bubbleTop = targetRect.bottom + 18;
+    } else {
+      bubbleTop = targetRect.top - bubbleHeight - 18;
+    }
+    bubbleTop = bubbleTop.clamp(16.0, size.height - bubbleHeight - 16.0);
+
+    return _SpotlightHitTestRegion(
+      holeRect: targetRect?.inflate(7),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          IgnorePointer(
+            child: CustomPaint(
+              painter: _SpotlightPainter(targetRect: targetRect?.inflate(7)),
+            ),
           ),
-        ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460, maxHeight: 570),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4776FF), Color(0xFF8B5CF6)],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.lightbulb_outline_rounded, color: Colors.white),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {},
+              child: const SizedBox.expand(),
+            ),
+          ),
+          Positioned(
+            left: (size.width - bubbleWidth) / 2,
+            top: bubbleTop,
+            width: bubbleWidth,
+            child: Material(
+              color: const Color(0xFF101A31),
+              elevation: 24,
+              shadowColor: Colors.black.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(24),
+              clipBehavior: Clip.antiAlias,
+              child: Container(
+                constraints: BoxConstraints(maxHeight: bubbleHeight),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: const Color(0xFF7199FF).withValues(alpha: 0.55),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            widget.french ? 'GUIDE PAS À PAS' : 'FIRST-TIME APP GUIDE',
-                            style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.w900,
-                              fontSize: 13, letterSpacing: 0.5,
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF4776FF), Color(0xFF8B5CF6)],
+                              ),
+                              borderRadius: BorderRadius.circular(13),
+                            ),
+                            child: const Icon(
+                              Icons.lightbulb_outline_rounded,
+                              color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 3),
-                          Text(
-                            _sectionTitle,
-                            style: const TextStyle(
-                              color: Color(0xFF9FB5E6), fontSize: 10,
-                              fontWeight: FontWeight.w800, letterSpacing: 0.8,
+                          const SizedBox(width: 11),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.french ? 'GUIDE PAS À PAS' : 'FIRST-TIME APP GUIDE',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 12,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  _sectionTitle,
+                                  style: const TextStyle(
+                                    color: Color(0xFF9FB5E6),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.7,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => widget.onComplete(_GuideResult.skipAll),
+                            child: Text(widget.french ? 'Ignorer' : 'Skip'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 5,
+                          backgroundColor: Colors.white.withValues(alpha: 0.08),
+                          valueColor: const AlwaysStoppedAnimation(Color(0xFF6E8BFF)),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          const Icon(Icons.touch_app_rounded, color: Color(0xFF8FB6FF), size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              target,
+                              style: const TextStyle(
+                                color: Color(0xFF8FB6FF),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.45,
+                              ),
+                            ),
+                          ),
+                          Text(count, style: const TextStyle(color: Color(0xFF8393B3), fontSize: 11)),
+                        ],
+                      ),
+                      const SizedBox(height: 13),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 240),
+                        child: Column(
+                          key: ValueKey<int>(_index),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 21,
+                                height: 1.2,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TweenAnimationBuilder<double>(
+                              key: ValueKey<String>('spotlight-typed-$_index'),
+                              tween: Tween(begin: 0, end: 1),
+                              duration: Duration(milliseconds: (body.length * 12).clamp(700, 1500).toInt()),
+                              curve: Curves.easeOut,
+                              builder: (context, value, _) {
+                                final visible = (body.length * value).round().clamp(0, body.length).toInt();
+                                return Text(
+                                  body.substring(0, visible),
+                                  style: const TextStyle(
+                                    color: Color(0xFFC1CBE0),
+                                    fontSize: 13,
+                                    height: 1.6,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          if (_index > 0)
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: _back,
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                                  padding: const EdgeInsets.symmetric(vertical: 13),
+                                ),
+                                child: Text(widget.french ? 'Précédent' : 'Back'),
+                              ),
+                            )
+                          else
+                            const Spacer(),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 2,
+                            child: FilledButton(
+                              onPressed: _next,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF4776FF),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 13),
+                              ),
+                              child: Text(
+                                _index == widget.steps.length - 1
+                                    ? (widget.french ? 'Terminer' : 'Finish')
+                                    : (widget.french ? 'Suivant' : 'Next'),
+                                style: const TextStyle(fontWeight: FontWeight.w800),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(_GuideResult.skipAll),
-                      child: Text(widget.french ? 'Ignorer' : 'Skip'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: LinearProgressIndicator(
-                    value: progress, minHeight: 5,
-                    backgroundColor: Colors.white.withValues(alpha: 0.08),
-                    valueColor: const AlwaysStoppedAnimation(Color(0xFF6E8BFF)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.92, end: 1.06),
-                      duration: const Duration(milliseconds: 750),
-                      curve: Curves.easeInOut,
-                      builder: (context, value, child) =>
-                          Transform.scale(scale: value, child: child),
-                      child: const Icon(Icons.touch_app_rounded, color: Color(0xFF8FB6FF), size: 22),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        target,
-                        style: const TextStyle(
-                          color: Color(0xFF8FB6FF), fontSize: 10,
-                          fontWeight: FontWeight.w900, letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                    Text(count, style: const TextStyle(color: Color(0xFF8393B3), fontSize: 11)),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(begin: const Offset(0.035, 0), end: Offset.zero).animate(animation),
-                      child: child,
-                    ),
-                  ),
-                  child: Column(
-                    key: ValueKey<int>(_index),
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: const TextStyle(color: Colors.white, fontSize: 22, height: 1.2, fontWeight: FontWeight.w900)),
-                      const SizedBox(height: 12),
-                      TweenAnimationBuilder<double>(
-                        key: ValueKey<String>('typed-' + _index.toString()),
-                        tween: Tween(begin: 0, end: 1),
-                        duration: Duration(milliseconds: (body.length * 14).clamp(850, 1700).toInt()),
-                        curve: Curves.easeOut,
-                        builder: (context, value, _) {
-                          final visible = (body.length * value).round().clamp(0, body.length).toInt();
-                          return Text(
-                            body.substring(0, visible),
-                            style: const TextStyle(color: Color(0xFFC1CBE0), fontSize: 14, height: 1.65),
-                          );
-                        },
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.french
+                            ? 'Le guide ne réalise aucun achat ni paiement. Vous pouvez l’ignorer.'
+                            : 'The guide never makes a purchase or payment. You can skip it.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Color(0xFF7788A9), fontSize: 10, height: 1.4),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 22),
-                Row(
-                  children: [
-                    if (_index > 0)
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => setState(() => _index--),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            side: BorderSide(color: Colors.white.withValues(alpha: 0.18)),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          child: Text(widget.french ? 'Précédent' : 'Back'),
-                        ),
-                      )
-                    else
-                      const Spacer(),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      flex: 2,
-                      child: FilledButton(
-                        onPressed: _next,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF4776FF),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        child: Text(
-                          _index == widget.steps.length - 1
-                              ? (widget.french ? 'Terminer' : 'Finish')
-                              : (widget.french ? 'Suivant' : 'Next'),
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  widget.french
-                      ? 'Le guide ne réalise aucun achat ni paiement. Vous pouvez l’ignorer.'
-                      : 'The guide never makes a purchase or payment. You can skip it.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF7788A9), fontSize: 10, height: 1.4),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
+  }
+}
+
+class _SpotlightPainter extends CustomPainter {
+  const _SpotlightPainter({required this.targetRect});
+  final Rect? targetRect;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size);
+    if (targetRect != null) {
+      path.addRRect(RRect.fromRectAndRadius(targetRect!, const Radius.circular(16)));
+    }
+    canvas.drawPath(path, Paint()..color = Colors.black.withValues(alpha: 0.78));
+    if (targetRect != null) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(targetRect!, const Radius.circular(16)),
+        Paint()
+          ..color = const Color(0xFF80A7FF)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.2,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SpotlightPainter oldDelegate) =>
+      oldDelegate.targetRect != targetRect;
+}
+
+class _SpotlightHitTestRegion extends SingleChildRenderObjectWidget {
+  const _SpotlightHitTestRegion({required this.holeRect, required super.child});
+  final Rect? holeRect;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderSpotlightHitTestRegion(holeRect);
+
+  @override
+  void updateRenderObject(BuildContext context, covariant _RenderSpotlightHitTestRegion renderObject) {
+    renderObject.holeRect = holeRect;
+  }
+}
+
+class _RenderSpotlightHitTestRegion extends RenderProxyBox {
+  _RenderSpotlightHitTestRegion(this.holeRect);
+  Rect? holeRect;
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (holeRect?.contains(position) == true) return false;
+    return super.hitTest(result, position: position);
   }
 }
