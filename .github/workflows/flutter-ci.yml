@@ -39,10 +39,19 @@ jobs:
       - name: Analyze Dart and Flutter code
         run: >-
           flutter analyze --no-fatal-infos
+          lib/features/onboarding/first_time_app_guide.dart
+          lib/features/onboarding/onboarding_gate.dart
+          lib/features/auth/pages/auth_gate.dart
+          lib/features/home/home_page.dart
+          lib/features/activate/pages/activate_page.dart
+          lib/features/activate/widgets/tnum_activation_panel.dart
+          lib/features/active/pages/active_page.dart
+          lib/features/active/widgets/tnum_active_section.dart
+          lib/features/orders/pages/orders_page.dart
+          lib/features/wallet/pages/wallet_page.dart
+          lib/app/router.dart
           lib/features/referrals
           lib/core/services/auth_service.dart
-          lib/features/auth/pages/auth_gate.dart
-          lib/app/router.dart
 
       - name: Run Flutter tests
-        run: flutter test test/referrals
+        run: flutter test test/onboarding test/referrals
