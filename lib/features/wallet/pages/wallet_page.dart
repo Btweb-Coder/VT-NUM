@@ -340,6 +340,16 @@ var waitingMessage = preparingMessage;
 
     if (!mounted) return;
     var guideStarted = false;
+    final guideScrollController = ScrollController();
+    FirstTimeAppGuide.registerReveal('topup', () {
+      if (guideScrollController.hasClients) {
+        guideScrollController.animateTo(
+          guideScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -501,6 +511,7 @@ var waitingMessage = preparingMessage;
               child: Form(
                 key: formKey,
                 child: SingleChildScrollView(
+                  controller: guideScrollController,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1087,6 +1098,8 @@ var waitingMessage = preparingMessage;
 
     countdownTimer?.cancel();
     pollTimer?.cancel();
+    FirstTimeAppGuide.unregisterReveal('topup');
+    guideScrollController.dispose();
   }
 }
 
