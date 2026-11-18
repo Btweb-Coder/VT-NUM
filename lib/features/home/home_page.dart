@@ -182,6 +182,7 @@ class _HomePageState extends State<HomePage> {
   late Stream<List<Order>> _ordersStream;
 
   bool _isRefreshing = false;
+  final ScrollController _guideScrollController = ScrollController();
 
   // Dernières données reçues avec succès.
   // Elles servent uniquement à conserver l'affichage pendant une erreur réseau.
@@ -194,11 +195,28 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
+    FirstTimeAppGuide.registerReveal('home', () {
+      if (_guideScrollController.hasClients) {
+        _guideScrollController.animateTo(
+          _guideScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+
     _servicesFuture = CatalogBootstrapService.instance.vtServices.then(
       (r) => r.data,
     );
     _walletStream = WalletRepository().watchWallet();
     _ordersStream = OrderRepository().watchOrders();
+  }
+
+  @override
+  void dispose() {
+    FirstTimeAppGuide.unregisterReveal('home');
+    _guideScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _refreshDashboard() async {
@@ -236,6 +254,7 @@ class _HomePageState extends State<HomePage> {
     return _HomePremiumBackground(
       child: SafeArea(
         child: CustomScrollView(
+          controller: _guideScrollController,
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
