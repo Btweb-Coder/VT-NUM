@@ -30,13 +30,20 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
     builder: (context, snapshot) {
       if (snapshot.hasError) {
         final message = TnumFeedbackMessage.fromError(snapshot.error!);
-        return Padding(
+        final errorMessage = Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Text(
             context.strings.text(message.messageKey),
             style: const TextStyle(color: Colors.orangeAccent),
           ),
         );
+        return widget.guideAnchorEnabled
+            ? FirstTimeAppGuide.anchor(
+                'active',
+                'SMS / VERIFICATION CODE',
+                errorMessage,
+              )
+            : errorMessage;
       }
       final rows = snapshot.data ?? const <Map<String, dynamic>>[];
       return Column(
@@ -104,7 +111,7 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
                   ),
                 ),
                 subtitle: Text(
-                  '${context.strings.text('tnum.origin')} · ${country['name'] ?? row['country_code']} · ${tnumStatusLabel(context, '${row['status'] ?? ''}') }',
+                  '${context.strings.text('tnum.origin')} · ${country['name'] ?? row['country_code']} · ${tnumStatusLabel(context, '${row['status'] ?? ''}')}',
                   style: const TextStyle(color: Color(0xFFA5B4D0)),
                 ),
                 trailing: const Icon(
