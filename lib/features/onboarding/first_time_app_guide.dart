@@ -24,6 +24,13 @@ class FirstTimeAppGuide {
       () => GlobalKey(debugLabel: 'first-time-guide-$id'),
     );
   }
+
+  static Widget anchor(String section, String target, Widget child) {
+    return KeyedSubtree(
+      key: anchorKey(section, target),
+      child: child,
+    );
+  }
   static Completer<void>? _registrationCompletion;
 
   static String _doneKey(String section) =>
