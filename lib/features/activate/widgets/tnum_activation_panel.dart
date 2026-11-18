@@ -34,6 +34,7 @@ class TnumActivationPanel extends StatefulWidget {
 class _TnumActivationPanelState extends State<TnumActivationPanel> {
   late final _repository = widget.repository ?? TnumRepository();
   final _search = TextEditingController();
+  final ScrollController _guideScrollController = ScrollController();
   Timer? _pollTimer;
   List<Map<String, dynamic>> _countries = [];
   List<TnumCatalogItem> _catalog = [];
@@ -55,6 +56,15 @@ class _TnumActivationPanelState extends State<TnumActivationPanel> {
   @override
   void initState() {
     super.initState();
+    FirstTimeAppGuide.registerReveal('activate', () {
+      if (_guideScrollController.hasClients) {
+        _guideScrollController.animateTo(
+          _guideScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
     _loadBootstrappedCatalog();
     unawaited(_refresh());
     _startPolling();
@@ -63,6 +73,8 @@ class _TnumActivationPanelState extends State<TnumActivationPanel> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    FirstTimeAppGuide.unregisterReveal('activate');
+    _guideScrollController.dispose();
     _search.dispose();
     super.dispose();
   }
@@ -419,6 +431,7 @@ class _TnumActivationPanelState extends State<TnumActivationPanel> {
       ? _buildOperations(_history, history: true)
       : ListView(
           key: const ValueKey('tnum-catalog'),
+          controller: _guideScrollController,
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 35),
           children: [
             _buildHeader(),
@@ -492,26 +505,30 @@ class _TnumActivationPanelState extends State<TnumActivationPanel> {
                 ),
               ),
             const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    context.strings.text('tnum.active_title'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+            FirstTimeAppGuide.anchor(
+              'activate',
+              'NUMBER AND SMS',
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.strings.text('tnum.active_title'),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: _refresh,
-                  icon: const Icon(
-                    Icons.refresh_rounded,
-                    color: Color(0xFF93B4FF),
+                  IconButton(
+                    onPressed: _refresh,
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: Color(0xFF93B4FF),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             if (_activations.isEmpty)
               Text(
