@@ -180,10 +180,21 @@ class _ActivePageState extends State<ActivePage> {
   final _audit = AuditService();
 
   Timer? _timer;
+  final ScrollController _guideScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+
+    FirstTimeAppGuide.registerReveal('active', () {
+      if (_guideScrollController.hasClients) {
+        _guideScrollController.animateTo(
+          _guideScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
 
     _timer = Timer.periodic(
       const Duration(seconds: 1),
@@ -198,6 +209,8 @@ class _ActivePageState extends State<ActivePage> {
   @override
   void dispose() {
     _timer?.cancel();
+    FirstTimeAppGuide.unregisterReveal('active');
+    _guideScrollController.dispose();
     super.dispose();
   }
 
@@ -229,6 +242,7 @@ class _ActivePageState extends State<ActivePage> {
               backgroundColor: const Color(0xFF111A32),
               onRefresh: () async {},
               child: ListView(
+                controller: _guideScrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                 children: [
