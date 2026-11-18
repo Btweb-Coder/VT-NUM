@@ -17,13 +17,12 @@ void main() {
     tester,
   ) async {
     var submitted = 0;
-    final scheduledGuide = Completer<Future<void>>();
+    late Future<void> guideFuture;
     await _mountAuthGuide(
       tester,
-      scheduledGuide,
+      onGuideStarted: (future) => guideFuture = future,
       onSubmit: () => submitted++,
     );
-    final guideFuture = await scheduledGuide.future;
 
     expect(find.text('FIRST-TIME APP GUIDE'), findsOneWidget);
     expect(find.text('1/6'), findsOneWidget);
@@ -62,9 +61,11 @@ void main() {
   });
 
   testWidgets('Skip disables the remaining first-time guide', (tester) async {
-    final scheduledGuide = Completer<Future<void>>();
-    await _mountAuthGuide(tester, scheduledGuide);
-    final guideFuture = await scheduledGuide.future;
+    late Future<void> guideFuture;
+    await _mountAuthGuide(
+      tester,
+      onGuideStarted: (future) => guideFuture = future,
+    );
 
     expect(find.text('FIRST-TIME APP GUIDE'), findsOneWidget);
     await tester.tap(find.text('Skip'));
@@ -114,8 +115,8 @@ void main() {
 }
 
 Future<void> _mountAuthGuide(
-  WidgetTester tester,
-  Completer<Future<void>> scheduledGuide, {
+  WidgetTester tester, {
+  required ValueChanged<Future<void>> onGuideStarted,
   VoidCallback? onSubmit,
 }) async {
   var scheduled = false;
@@ -128,7 +129,7 @@ Future<void> _mountAuthGuide(
             if (!scheduled) {
               scheduled = true;
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                scheduledGuide.complete(
+                onGuideStarted(
                   FirstTimeAppGuide.showIfNeeded(context, 'auth'),
                 );
               });
