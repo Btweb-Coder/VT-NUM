@@ -276,7 +276,6 @@ class _WalletPageState extends State<WalletPage> {
   }
 
 Future<void> _showTopUpSheet() async {
-  await FirstTimeAppGuide.showIfNeeded(context, 'topup');
   if (!mounted) return;
   final preparingMessage =
       context.strings.text('wallet.preparing');
@@ -340,11 +339,20 @@ var waitingMessage = preparingMessage;
     String? terminalMessage;
 
     if (!mounted) return;
+    var guideStarted = false;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
+          if (!guideStarted) {
+            guideStarted = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (sheetContext.mounted) {
+                unawaited(FirstTimeAppGuide.showIfNeeded(sheetContext, 'topup'));
+              }
+            });
+          }
           final intent = activeIntent;
           final status = intent?.status.toUpperCase() ?? '';
 
@@ -518,6 +526,7 @@ var waitingMessage = preparingMessage;
                       const SizedBox(height: 16),
 
                       DropdownButtonFormField<String>(
+                        key: FirstTimeAppGuide.anchorKey('topup', 'PAYMENT PROVIDER'),
                         initialValue: gateway,
                         items: gateways
                             .map(
@@ -576,6 +585,7 @@ var waitingMessage = preparingMessage;
                       ),
 
                       TextFormField(
+                        key: FirstTimeAppGuide.anchorKey('topup', 'AMOUNT (USD)'),
                         controller: amount,
                         enabled: activeIntent == null && !submitting,
                         keyboardType: TextInputType.number,
@@ -621,6 +631,7 @@ var waitingMessage = preparingMessage;
                       const SizedBox(height: 16),
 
                       Container(
+                        key: FirstTimeAppGuide.anchorKey('topup', 'RECHARGE SUMMARY'),
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -753,6 +764,7 @@ var waitingMessage = preparingMessage;
                       const SizedBox(height: 16),
 
                       TextFormField(
+                        key: FirstTimeAppGuide.anchorKey('topup', 'MOBILE NUMBER'),
                         controller: phone,
                         enabled: activeIntent == null && !submitting,
                         keyboardType: TextInputType.phone,
@@ -885,6 +897,7 @@ var waitingMessage = preparingMessage;
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
+                          key: FirstTimeAppGuide.anchorKey('topup', 'REQUEST PAYMENT'),
                           onPressed: submitting || activeIntent != null
                               ? null
                               : () async {
