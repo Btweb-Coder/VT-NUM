@@ -43,8 +43,8 @@ class _AppRouterState extends State<AppRouter> {
         onOpenWalletTopUp: _openWalletTopUp,
       ),
       null,
-      const ActivePage(),
-      const OrdersPage(),
+      const ActivePage(isVisible: false),
+      const OrdersPage(isVisible: false),
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -63,14 +63,10 @@ class _AppRouterState extends State<AppRouter> {
       } else if (pages[1] != null) {
         pages[1] = const ActivatePage(isVisible: false);
       }
-    });
 
-    if (index == 2 || index == 3) {
-      final section = index == 2 ? 'active' : 'history';
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(FirstTimeAppGuide.showIfNeeded(context, section));
-      });
-    }
+      pages[2] = ActivePage(isVisible: index == 2);
+      pages[3] = OrdersPage(isVisible: index == 3);
+    });
   }
 
   void _openSupportChat() {
