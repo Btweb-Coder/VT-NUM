@@ -12,6 +12,7 @@ import '../../../core/services/order_repository.dart';
 import '../../activate/data/activation_repository.dart';
 import '../../../core/widgets/activation_card.dart';
 import '../widgets/tnum_active_section.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 class _ActivePremiumBackground extends StatefulWidget {
   final Widget child;
@@ -239,15 +240,16 @@ class _ActivePageState extends State<ActivePage> {
 
                   const SizedBox(height: 29),
 
-                  _buildSectionHeader(activations.length),
+                  FirstTimeAppGuide.anchor('active', 'ACTIVE NUMBERS LIST', _buildSectionHeader(activations.length)),
 
                   const SizedBox(height: 16),
 
                   if (activations.isEmpty)
                     _message(context.strings.text('active.none'))
                   else
-                    ...activations.map(
-                      (activation) => Padding(
+                    ...activations.asMap().entries.map((entry) {
+                      final activation = entry.value;
+                      final card = Padding(
                         padding: const EdgeInsets.only(bottom: 14),
                         child: Column(children: [
                           Align(alignment: Alignment.centerLeft,
@@ -260,15 +262,22 @@ class _ActivePageState extends State<ActivePage> {
                             onGetAnotherNumber: () => _replace(activation),
                           ),
                         ]),
-                      ),
-                    ),
+                      );
+                      return entry.key == 0
+                          ? FirstTimeAppGuide.anchor('active', 'NUMBER AND STATUS', card)
+                          : card;
+                    }),
 
                   const SizedBox(height: 20),
-                  const TnumActiveSection(),
+                  FirstTimeAppGuide.anchor(
+                    'active',
+                    'SMS / VERIFICATION CODE',
+                    const TnumActiveSection(),
+                  ),
 
                   const SizedBox(height: 18),
 
-                  _buildFooter(),
+                  FirstTimeAppGuide.anchor('active', 'AVAILABLE ACTIONS', _buildFooter()),
                 ],
               ),
             );
