@@ -17,10 +17,13 @@ void main() {
     tester,
   ) async {
     var submitted = 0;
-    final guideFuture = await _mountAuthGuide(
+    final scheduledGuide = Completer<Future<void>>();
+    await _mountAuthGuide(
       tester,
+      scheduledGuide,
       onSubmit: () => submitted++,
     );
+    final guideFuture = await scheduledGuide.future;
 
     expect(find.text('FIRST-TIME APP GUIDE'), findsOneWidget);
     expect(find.text('1/6'), findsOneWidget);
@@ -59,7 +62,9 @@ void main() {
   });
 
   testWidgets('Skip disables the remaining first-time guide', (tester) async {
-    final guideFuture = await _mountAuthGuide(tester);
+    final scheduledGuide = Completer<Future<void>>();
+    await _mountAuthGuide(tester, scheduledGuide);
+    final guideFuture = await scheduledGuide.future;
 
     expect(find.text('FIRST-TIME APP GUIDE'), findsOneWidget);
     await tester.tap(find.text('Skip'));
@@ -108,11 +113,11 @@ void main() {
   });
 }
 
-Future<Future<void>> _mountAuthGuide(
-  WidgetTester tester, {
+Future<void> _mountAuthGuide(
+  WidgetTester tester,
+  Completer<Future<void>> scheduledGuide, {
   VoidCallback? onSubmit,
 }) async {
-  final scheduledGuide = Completer<Future<void>>();
   var scheduled = false;
 
   await tester.pumpWidget(
@@ -191,5 +196,4 @@ Future<Future<void>> _mountAuthGuide(
   );
 
   await tester.pumpAndSettle();
-  return scheduledGuide.future;
 }
