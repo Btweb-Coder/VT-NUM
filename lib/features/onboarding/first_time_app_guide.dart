@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FirstTimeAppGuide {
@@ -27,6 +28,10 @@ class FirstTimeAppGuide {
 
   static void unregisterReveal(String section) {
     _revealCallbacks.remove(section);
+  }
+
+  static void revealSection(String section) {
+    _revealCallbacks[section]?.call();
   }
 
   /// Stable anchors shared by the app screens and the first-time guide.
@@ -430,7 +435,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
       if (targetContext != null && targetContext.mounted) break;
 
       if (attempt == 2) {
-        _revealCallbacks[widget.section]?.call();
+        FirstTimeAppGuide.revealSection(widget.section);
       }
       await Future<void>.delayed(const Duration(milliseconds: 150));
     }
