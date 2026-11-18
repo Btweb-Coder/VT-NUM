@@ -8,6 +8,7 @@ import '../../core/services/catalog_repository.dart';
 import '../../core/services/order_repository.dart';
 import '../../core/services/wallet_repository.dart';
 import '../../core/services/catalog_bootstrap_service.dart';
+import '../onboarding/first_time_app_guide.dart';
 
 // ============================================================
 // VT NUM — FOND PREMIUM ANIMÉ
@@ -243,7 +244,7 @@ class _HomePageState extends State<HomePage> {
                   _buildHeader(),
                   const SizedBox(height: 25),
 
-                  _balanceCard(),
+                  FirstTimeAppGuide.anchor('home', 'AVAILABLE BALANCE', _balanceCard()),
                   const SizedBox(height: 16),
 
                   _refreshDashboardButton(),
@@ -266,7 +267,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 17),
 
-                  _quickServices(),
+                  FirstTimeAppGuide.anchor('home', 'QUICK SERVICES', _quickServices()),
 
                   const SizedBox(height: 30),
 
@@ -277,7 +278,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 12),
 
-                  _activeOrders(),
+                  FirstTimeAppGuide.anchor('home', 'ACTIVE ACTIVATIONS', _activeOrders()),
 
                   const SizedBox(height: 30),
 
@@ -297,7 +298,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 17),
 
-                  _recentOrders(),
+                  FirstTimeAppGuide.anchor('home', 'RECENT ACTIVITY', _recentOrders()),
                 ]),
               ),
             ),
@@ -656,7 +657,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   if (widget.onOpenWalletTopUp != null) ...[
                     const SizedBox(width: 8),
-                    OutlinedButton.icon(
+                    FirstTimeAppGuide.anchor('home', 'ADD FUNDS', OutlinedButton.icon(
                       onPressed: widget.onOpenWalletTopUp,
                       icon: const Icon(Icons.add_rounded, size: 17),
                       label: Text(
@@ -715,7 +716,7 @@ class _HomePageState extends State<HomePage> {
                           height: 1.4,
                         ),
                       ),
-                    ),
+                    )),
                   ],
                 ),
               ),
