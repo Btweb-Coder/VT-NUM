@@ -469,7 +469,7 @@ class _ActivatePageState extends State<ActivatePage>
                 index: _selectedServer - 1,
                 children: [
                   isActive ? _buildActiveActivation() : _buildActivationForm(),
-                  FirstTimeAppGuide.anchor('activate', 'NUMBER AND SMS', _tnumPanel),
+                  _tnumPanel,
                 ],
               ),
             ),
