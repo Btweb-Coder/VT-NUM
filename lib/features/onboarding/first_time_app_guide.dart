@@ -109,8 +109,9 @@ class FirstTimeAppGuide {
 
   static Future<void> showIfNeeded(
     BuildContext context,
-    String section,
-  ) async {
+    String section, {
+    ValueChanged<String>? onStepChanged,
+  }) async {
     if (!_sections.contains(section) || _showing.contains(section)) return;
     _showing.add(section);
     try {
@@ -132,6 +133,7 @@ class FirstTimeAppGuide {
         section: section,
         french: french,
         steps: _steps(section),
+        onStepChanged: onStepChanged,
       );
 
       if (result == _GuideResult.skipAll) {
@@ -329,6 +331,7 @@ Future<_GuideResult?> _showSpotlightGuide(
   required String section,
   required bool french,
   required List<_GuideStep> steps,
+  ValueChanged<String>? onStepChanged,
 }) {
   final overlay = Overlay.of(context, rootOverlay: true);
   final completion = Completer<_GuideResult?>();
@@ -338,6 +341,7 @@ Future<_GuideResult?> _showSpotlightGuide(
       section: section,
       french: french,
       steps: steps,
+      onStepChanged: onStepChanged,
       onComplete: (result) {
         if (!completion.isCompleted) completion.complete(result);
         entry.remove();
@@ -354,12 +358,14 @@ class _SpotlightGuideOverlay extends StatefulWidget {
     required this.french,
     required this.steps,
     required this.onComplete,
+    this.onStepChanged,
   });
 
   final String section;
   final bool french;
   final List<_GuideStep> steps;
   final ValueChanged<_GuideResult> onComplete;
+  final ValueChanged<String>? onStepChanged;
 
   @override
   State<_SpotlightGuideOverlay> createState() => _SpotlightGuideOverlayState();
@@ -380,6 +386,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
     if (!mounted || widget.steps.isEmpty) return;
 
     final step = widget.steps[_index];
+    widget.onStepChanged?.call(step.targetEn);
     final key = FirstTimeAppGuide.anchorKey(widget.section, step.targetEn);
     final targetContext = key.currentContext;
 
