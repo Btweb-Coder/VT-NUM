@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../activate/data/tnum_repository.dart';
 import '../../activate/widgets/tnum_feedback.dart';
+import '../../onboarding/first_time_app_guide.dart';
 import '../../orders/pages/tnum_operation_details_page.dart';
 
 class TnumActiveSection extends StatefulWidget {
@@ -57,11 +58,16 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
             ],
           ),
           if (rows.isEmpty)
-            Text(
-              context.strings.text('tnum.no_active'),
-              style: const TextStyle(color: Color(0xFFA5B4D0)),
+            FirstTimeAppGuide.anchor(
+              'active',
+              'SMS / VERIFICATION CODE',
+              Text(
+                context.strings.text('tnum.no_active'),
+                style: const TextStyle(color: Color(0xFFA5B4D0)),
+              ),
             ),
-          ...rows.map((row) {
+          ...rows.asMap().entries.map((entry) {
+            final row = entry.value;
             final service = Map<String, dynamic>.from(
               row['services'] as Map? ?? {},
             );
@@ -69,7 +75,7 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
               row['countries'] as Map? ?? {},
             );
             final id = '${row['id']}';
-            return Card(
+            final card = Card(
               color: const Color(0xFF151D36),
               child: ListTile(
                 onTap: () => Navigator.push(
@@ -87,7 +93,7 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
                   ),
                 ),
                 subtitle: Text(
-                  '${context.strings.text('tnum.origin')} · ${country['name'] ?? row['country_code']} · ${tnumStatusLabel(context, '${row['status'] ?? ''}')}',
+                  '${context.strings.text('tnum.origin')} · ${country['name'] ?? row['country_code']} · ${tnumStatusLabel(context, '${row['status'] ?? ''}') }',
                   style: const TextStyle(color: Color(0xFFA5B4D0)),
                 ),
                 trailing: const Icon(
@@ -96,6 +102,13 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
                 ),
               ),
             );
+            return entry.key == 0
+                ? FirstTimeAppGuide.anchor(
+                    'active',
+                    'SMS / VERIFICATION CODE',
+                    card,
+                  )
+                : card;
           }),
         ],
       );
