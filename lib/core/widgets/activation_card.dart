@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../app/localization/app_localizations.dart';
 import '../../app/theme/colors.dart';
-import '../../features/onboarding/first_time_app_guide.dart';
 import '../models/activation.dart';
 
 class ActivationCard extends StatelessWidget {
@@ -11,14 +10,14 @@ class ActivationCard extends StatelessWidget {
 
   final VoidCallback? onCancel;
   final VoidCallback? onGetAnotherNumber;
-  final bool showGuideSmsAnchor;
+  final Key? smsGuideAnchorKey;
 
   const ActivationCard({
     super.key,
     required this.activation,
     this.onCancel,
     this.onGetAnotherNumber,
-    this.showGuideSmsAnchor = false,
+    this.smsGuideAnchorKey,
   });
 
   @override
@@ -64,11 +63,10 @@ final isProcessing = activation.isProcessing && !isReplaced;
 
           const SizedBox(height: 20),
 
-          if (showGuideSmsAnchor)
-            FirstTimeAppGuide.anchor(
-              'active',
-              'SMS / VERIFICATION CODE',
-              _smsSection(
+          if (smsGuideAnchorKey != null)
+            KeyedSubtree(
+              key: smsGuideAnchorKey,
+              child: _smsSection(
                 context,
                 isReplaced: isReplaced,
                 hasCode: hasCode,
