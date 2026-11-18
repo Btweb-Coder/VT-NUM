@@ -504,7 +504,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
     bubbleTop = bubbleTop.clamp(8.0, maxBubbleTop >= 8.0 ? maxBubbleTop : 8.0).toDouble();
 
     return _SpotlightHitTestRegion(
-      holeRect: targetRect?.inflate(7),
+      holeRect: targetRect,
       child: Stack(
         fit: StackFit.expand,
         children: [
