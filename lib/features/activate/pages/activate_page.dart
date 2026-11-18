@@ -255,7 +255,10 @@ class _ActivatePageState extends State<ActivatePage>
             context,
             'activate',
             onStepChanged: (target) {
-              final nextServer = target.startsWith('T-NUM:') ? 2 : 1;
+              final nextServer =
+                  target.startsWith('T-NUM:') || target == 'NUMBER AND SMS'
+                  ? 2
+                  : 1;
               if (mounted && _selectedServer != nextServer) {
                 setState(() => _selectedServer = nextServer);
               }
