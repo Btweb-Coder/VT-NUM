@@ -221,6 +221,8 @@ class _OrdersPageState extends State<OrdersPage> {
                       unawaited(
                         FirstTimeAppGuide.showIfNeeded(this.context, 'history'),
                       );
+                    } else {
+                      _guideScheduled = false;
                     }
                   });
                 }
