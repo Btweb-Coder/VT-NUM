@@ -264,7 +264,11 @@ class _ActivePageState extends State<ActivePage> {
                         ]),
                       );
                       return entry.key == 0
-                          ? FirstTimeAppGuide.anchor('active', 'NUMBER AND STATUS', card)
+                          ? FirstTimeAppGuide.anchor(
+                              'active',
+                              'AVAILABLE ACTIONS',
+                              FirstTimeAppGuide.anchor('active', 'NUMBER AND STATUS', card),
+                            )
                           : card;
                     }),
 
@@ -277,7 +281,7 @@ class _ActivePageState extends State<ActivePage> {
 
                   const SizedBox(height: 18),
 
-                  FirstTimeAppGuide.anchor('active', 'AVAILABLE ACTIONS', _buildFooter()),
+                  _buildFooter(),
                 ],
               ),
             );
