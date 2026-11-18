@@ -192,8 +192,8 @@ class FirstTimeAppGuide {
             'Lors de l’inscription, cochez cette case pour accepter les conditions. Vous pouvez ouvrir le lien pour les lire avant.'),
           _GuideStep('CREATE ACCOUNT / LOG IN', 'CRÉER UN COMPTE / SE CONNECTER',
             'Finish creating your account', 'Terminez la création du compte',
-            'When you are ready, use Create account once. Follow the email verification instructions, then return and choose Log in. Existing users can switch to Log in at the bottom.',
-            'Lorsque vous êtes prêt, utilisez Créer un compte une seule fois. Suivez les instructions de vérification reçues par e-mail, puis revenez choisir Se connecter. Les utilisateurs déjà inscrits peuvent choisir Se connecter en bas.',
+            'After you finish the guide, use Create account once. Follow the email verification instructions, then return and choose Log in.',
+            'Après le guide, utilisez Créer un compte une seule fois. Suivez les instructions de vérification reçues par e-mail, puis revenez choisir Se connecter.',
             allowTargetInteraction: false),
         ];
       case 'home':
@@ -257,8 +257,8 @@ class FirstTimeAppGuide {
             allowTargetInteraction: false),
           _GuideStep('NUMBER AND SMS', 'NUMÉRO ET SMS',
             'Receive your verification code', 'Recevez votre code de vérification',
-            'After a T-NUM purchase, your activation appears in this section. Open it to follow the number and SMS status. Copy the code when it arrives.',
-            'Après un achat T-NUM, votre activation apparaît dans cette section. Ouvrez-la pour suivre le numéro et le statut du SMS. Copiez le code dès son arrivée.',
+            'After a T-NUM purchase, your activation appears in this section. After you finish the guide, open it to follow the number and SMS status. Copy the code when it arrives.',
+            'Après un achat T-NUM, votre activation apparaît dans cette section. Après le guide, ouvrez-la pour suivre le numéro et le statut du SMS. Copiez le code dès son arrivée.',
             allowTargetInteraction: false),
 
         ];
@@ -271,8 +271,8 @@ class FirstTimeAppGuide {
             allowTargetInteraction: false),
           _GuideStep('NUMBER AND STATUS', 'NUMÉRO ET STATUT',
             'Check each operation', 'Vérifiez chaque opération',
-            'Each item shows information such as service, country, number and status. Open an item to see its detailed tracking screen.',
-            'Chaque élément affiche notamment le service, le pays, le numéro et le statut. Ouvrez un élément pour consulter son suivi détaillé.',
+            'Each item shows information such as service, country, number and status. After the guide, open an item to see its detailed tracking screen.',
+            'Chaque élément affiche notamment le service, le pays, le numéro et le statut. Après le guide, ouvrez un élément pour consulter son suivi détaillé.',
             allowTargetInteraction: false),
           _GuideStep('SMS / VERIFICATION CODE', 'SMS / CODE DE VÉRIFICATION',
             'Copy the SMS code', 'Copiez le code SMS',
@@ -281,8 +281,8 @@ class FirstTimeAppGuide {
             allowTargetInteraction: false),
           _GuideStep('AVAILABLE ACTIONS', 'ACTIONS DISPONIBLES',
             'Follow the operation', 'Suivez l’opération',
-            'Use the refresh or action buttons shown for an operation when needed. Read the confirmation before completing or cancelling anything.',
-            'Utilisez les boutons d’actualisation ou d’action disponibles si nécessaire. Lisez la confirmation avant de terminer ou d’annuler une opération.',
+            'After the guide, use the refresh or action buttons shown for an operation when needed. Read the confirmation before completing or cancelling anything.',
+            'Après le guide, utilisez les boutons d’actualisation ou d’action disponibles si nécessaire. Lisez la confirmation avant de terminer ou d’annuler une opération.',
             allowTargetInteraction: false),
         ];
       case 'history':
@@ -304,8 +304,8 @@ class FirstTimeAppGuide {
             allowTargetInteraction: false),
           _GuideStep('HISTORY LIST', 'LISTE DE L’HISTORIQUE',
             'Refresh the list', 'Actualisez la liste',
-            'Pull the list down to refresh your records when you want to see the latest information.',
-            'Faites glisser la liste vers le bas pour actualiser les opérations et voir les dernières informations.',
+            'After the guide, pull the list down to refresh your records when you want to see the latest information.',
+            'Après le guide, faites glisser la liste vers le bas pour actualiser les opérations et voir les dernières informations.',
             allowTargetInteraction: false),
         ];
       case 'topup':
