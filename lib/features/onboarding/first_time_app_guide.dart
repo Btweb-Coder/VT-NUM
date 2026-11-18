@@ -489,7 +489,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
     final progress = (_index + 1) / widget.steps.length;
     final count = (_index + 1).toString() + '/' + widget.steps.length.toString();
     final bubbleWidth = size.width < 480 ? size.width - 28 : 440.0;
-    final bubbleHeight = (size.height - 32).clamp(260.0, 390.0);
+    final bubbleHeight = (size.height - 32).clamp(260.0, 390.0).toDouble();
     final targetRect = _targetReady ? _targetRect : null;
 
     double bubbleTop;
@@ -500,7 +500,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
     } else {
       bubbleTop = targetRect.top - bubbleHeight - 18;
     }
-    bubbleTop = bubbleTop.clamp(16.0, size.height - bubbleHeight - 16.0);
+    bubbleTop = bubbleTop.clamp(16.0, size.height - bubbleHeight - 16.0).toDouble();
 
     return _SpotlightHitTestRegion(
       holeRect: targetRect?.inflate(7),
