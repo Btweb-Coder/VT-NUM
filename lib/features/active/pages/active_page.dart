@@ -276,6 +276,7 @@ class _ActivePageState extends State<ActivePage> {
                                 style: const TextStyle(color: Color(0xFF8FB6FF), fontSize: 10, fontWeight: FontWeight.w900)))),
                           ActivationCard(
                             activation: activation,
+                            showGuideSmsAnchor: entry.key == 0,
                             onCancel: () => _cancel(activation),
                             onGetAnotherNumber: () => _replace(activation),
                           ),
@@ -291,7 +292,9 @@ class _ActivePageState extends State<ActivePage> {
                     }),
 
                   const SizedBox(height: 20),
-                  const TnumActiveSection(),
+                  TnumActiveSection(
+                    guideAnchorEnabled: activations.isEmpty,
+                  ),
 
                   const SizedBox(height: 18),
 
