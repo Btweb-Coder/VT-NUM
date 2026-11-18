@@ -1949,7 +1949,7 @@ setState(() {
                                         ],
                                 ),
                                 child: ElevatedButton(
-                        key: FirstTimeAppGuide.anchorKey('auth', 'CREATE ACCOUNT / LOG IN'),
+                                  key: FirstTimeAppGuide.anchorKey('auth', 'CREATE ACCOUNT / LOG IN'),
                                   onPressed:
                                       _submitting ? null : _submit,
                                   style: ElevatedButton.styleFrom(
