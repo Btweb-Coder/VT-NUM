@@ -9,7 +9,6 @@ import '../../../app/router.dart';
 import '../../../app/theme/colors.dart';
 import '../../../core/services/auth_service.dart';
 import '../../onboarding/first_time_app_guide.dart';
-import '../../onboarding/first_time_app_guide.dart';
 
 enum _AlertType { success, error, info }
 
