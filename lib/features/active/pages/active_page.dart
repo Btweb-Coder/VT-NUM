@@ -245,6 +245,8 @@ class _ActivePageState extends State<ActivePage> {
                   unawaited(
                     FirstTimeAppGuide.showIfNeeded(this.context, 'active'),
                   );
+                } else {
+                  _guideScheduled = false;
                 }
               });
             }
