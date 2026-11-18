@@ -245,7 +245,11 @@ class _ActivePageState extends State<ActivePage> {
                   const SizedBox(height: 16),
 
                   if (activations.isEmpty)
-                    _message(context.strings.text('active.none'))
+                    FirstTimeAppGuide.anchor(
+                      'active',
+                      'NUMBER AND STATUS',
+                      _message(context.strings.text('active.none')),
+                    )
                   else
                     ...activations.asMap().entries.map((entry) {
                       final activation = entry.value;
@@ -281,7 +285,10 @@ class _ActivePageState extends State<ActivePage> {
 
                   const SizedBox(height: 18),
 
-                  _buildFooter(),
+                  if (activations.isEmpty)
+                    FirstTimeAppGuide.anchor('active', 'AVAILABLE ACTIONS', _buildFooter())
+                  else
+                    _buildFooter(),
                 ],
               ),
             );
