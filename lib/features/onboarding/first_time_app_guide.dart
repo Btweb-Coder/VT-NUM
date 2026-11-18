@@ -15,6 +15,18 @@ class FirstTimeAppGuide {
   ];
   static final Set<String> _showing = <String>{};
   static final Map<String, GlobalKey> _anchorKeys = <String, GlobalKey>{};
+  static final Map<String, VoidCallback> _revealCallbacks =
+      <String, VoidCallback>{};
+
+  /// Registers a screen-specific fallback for lazy scroll children that have
+  /// not been built yet. The guide invokes it only when an anchor is missing.
+  static void registerReveal(String section, VoidCallback reveal) {
+    _revealCallbacks[section] = reveal;
+  }
+
+  static void unregisterReveal(String section) {
+    _revealCallbacks.remove(section);
+  }
 
   /// Stable anchors shared by the app screens and the first-time guide.
   static GlobalKey anchorKey(String section, String target) {
@@ -283,7 +295,7 @@ class FirstTimeAppGuide {
             'See the details', 'Consultez les détails',
             'Tap any record to open its details and review the number, available SMS information and operation status.',
             'Touchez une opération pour ouvrir ses détails et revoir le numéro, les informations SMS disponibles et son statut.'),
-          _GuideStep('PULL TO REFRESH', 'TIRER POUR ACTUALISER',
+          _GuideStep('HISTORY LIST', 'LISTE DE L’HISTORIQUE',
             'Refresh the list', 'Actualisez la liste',
             'Pull the list down to refresh your records when you want to see the latest information.',
             'Faites glisser la liste vers le bas pour actualiser les opérations et voir les dernières informations.'),
@@ -384,6 +396,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
   int _index = 0;
   Rect? _targetRect;
   bool _targetReady = false;
+  int _focusGeneration = 0;
 
   @override
   void initState() {
@@ -394,6 +407,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
   Future<void> _focusCurrentStep() async {
     if (!mounted || widget.steps.isEmpty) return;
 
+    final generation = ++_focusGeneration;
     final step = widget.steps[_index];
     widget.onStepChanged?.call(step.targetEn);
     if (widget.onStepChanged != null) {
@@ -401,9 +415,19 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
       if (!mounted) return;
     }
     final key = FirstTimeAppGuide.anchorKey(widget.section, step.targetEn);
-    final targetContext = key.currentContext;
+    BuildContext? targetContext;
+    for (var attempt = 0; attempt < 20; attempt++) {
+      if (!mounted || generation != _focusGeneration) return;
+      targetContext = key.currentContext;
+      if (targetContext != null && targetContext.mounted) break;
 
-    if (targetContext != null) {
+      if (attempt == 2) {
+        _revealCallbacks[widget.section]?.call();
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+
+    if (targetContext != null && targetContext.mounted) {
       try {
         await Scrollable.ensureVisible(
           targetContext,
@@ -417,6 +441,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
     }
 
     await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || generation != _focusGeneration) return;
     if (!mounted) return;
 
     Rect? rect;
@@ -435,7 +460,11 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
           Offset.zero,
           ancestor: overlayObject,
         );
-        rect = topLeft & targetObject.size;
+        final screenRect = Offset.zero & MediaQuery.sizeOf(context);
+        final measuredRect = topLeft & targetObject.size;
+        if (measuredRect.overlaps(screenRect)) {
+          rect = measuredRect.intersect(screenRect);
+        }
       }
     }
 
@@ -450,6 +479,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
       widget.onComplete(_GuideResult.finished);
       return;
     }
+    _focusGeneration++;
     setState(() {
       _index++;
       _targetReady = false;
@@ -460,6 +490,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
 
   void _back() {
     if (_index == 0) return;
+    _focusGeneration++;
     setState(() {
       _index--;
       _targetReady = false;
