@@ -292,7 +292,12 @@ class _ActivePageState extends State<ActivePage> {
                                 style: const TextStyle(color: Color(0xFF8FB6FF), fontSize: 10, fontWeight: FontWeight.w900)))),
                           ActivationCard(
                             activation: activation,
-                            showGuideSmsAnchor: entry.key == 0,
+                            smsGuideAnchorKey: entry.key == 0
+                                ? FirstTimeAppGuide.anchorKey(
+                                    'active',
+                                    'SMS / VERIFICATION CODE',
+                                  )
+                                : null,
                             onCancel: () => _cancel(activation),
                             onGetAnotherNumber: () => _replace(activation),
                           ),
