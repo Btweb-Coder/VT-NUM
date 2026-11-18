@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -154,7 +155,9 @@ class _OrdersStarsPainter extends CustomPainter {
 }
 
 class OrdersPage extends StatefulWidget {
-  const OrdersPage({super.key});
+  const OrdersPage({super.key, this.isVisible = false});
+
+  final bool isVisible;
 
   @override
   State<OrdersPage> createState() => _OrdersPageState();
@@ -162,6 +165,7 @@ class OrdersPage extends StatefulWidget {
 
 class _OrdersPageState extends State<OrdersPage> {
   final ScrollController _guideScrollController = ScrollController();
+  bool _guideScheduled = false;
   late Future<List<Map<String, dynamic>>> _tnumHistory = TnumRepository()
       .activations(history: true);
 
@@ -208,6 +212,19 @@ class _OrdersPageState extends State<OrdersPage> {
             return FutureBuilder<List<Map<String, dynamic>>>(
               future: _tnumHistory,
               builder: (context, historySnapshot) {
+                if (widget.isVisible &&
+                    !_guideScheduled &&
+                    historySnapshot.connectionState == ConnectionState.done) {
+                  _guideScheduled = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && widget.isVisible) {
+                      unawaited(
+                        FirstTimeAppGuide.showIfNeeded(this.context, 'history'),
+                      );
+                    }
+                  });
+                }
+
                 final tnumRows =
                     historySnapshot.data ?? const <Map<String, dynamic>>[];
                 final operationCount = orders.length + tnumRows.length;
