@@ -168,7 +168,9 @@ class _ActiveStarsPainter extends CustomPainter {
 }
 
 class ActivePage extends StatefulWidget {
-  const ActivePage({super.key});
+  const ActivePage({super.key, this.isVisible = false});
+
+  final bool isVisible;
 
   @override
   State<ActivePage> createState() => _ActivePageState();
@@ -180,6 +182,7 @@ class _ActivePageState extends State<ActivePage> {
   final _audit = AuditService();
 
   Timer? _timer;
+  bool _guideScheduled = false;
   final ScrollController _guideScrollController = ScrollController();
 
   @override
@@ -233,6 +236,17 @@ class _ActivePageState extends State<ActivePage> {
                   color: Color(0xFF8B9BFF),
                 ),
               );
+            }
+
+            if (widget.isVisible && !_guideScheduled) {
+              _guideScheduled = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && widget.isVisible) {
+                  unawaited(
+                    FirstTimeAppGuide.showIfNeeded(this.context, 'active'),
+                  );
+                }
+              });
             }
 
             final activations = snapshot.data!;
