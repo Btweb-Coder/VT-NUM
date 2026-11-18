@@ -251,7 +251,16 @@ class _ActivatePageState extends State<ActivatePage>
             await FirstTimeAppGuide.wasRegisteredOnThisInstall();
         if (!newlyRegistered) await _showActivationNotice();
         if (mounted && widget.isVisible) {
-          await FirstTimeAppGuide.showIfNeeded(context, 'activate');
+          await FirstTimeAppGuide.showIfNeeded(
+            context,
+            'activate',
+            onStepChanged: (target) {
+              final nextServer = target.startsWith('T-NUM:') ? 2 : 1;
+              if (mounted && _selectedServer != nextServer) {
+                setState(() => _selectedServer = nextServer);
+              }
+            },
+          );
         }
       } finally {
         _showingActivationNotice = false;
@@ -443,6 +452,7 @@ class _ActivatePageState extends State<ActivatePage>
                   ),
                 ),
                 child: Row(
+                  key: FirstTimeAppGuide.anchorKey('activate', 'VT-NUM / T-NUM'),
                   children: [
                     Expanded(child: _serverButton(1, 'SERVER 1', 'vt-num')),
                     const SizedBox(width: 6),
@@ -456,7 +466,7 @@ class _ActivatePageState extends State<ActivatePage>
                 index: _selectedServer - 1,
                 children: [
                   isActive ? _buildActiveActivation() : _buildActivationForm(),
-                  _tnumPanel,
+                  FirstTimeAppGuide.anchor('activate', 'NUMBER AND SMS', _tnumPanel),
                 ],
               ),
             ),
@@ -631,6 +641,7 @@ class _ActivatePageState extends State<ActivatePage>
 
   Widget _buildServiceSection() {
     return Column(
+      key: FirstTimeAppGuide.anchorKey('activate', 'VT-NUM: SERVICE'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -663,6 +674,7 @@ class _ActivatePageState extends State<ActivatePage>
 
   Widget _buildCountrySection() {
     return Column(
+      key: FirstTimeAppGuide.anchorKey('activate', 'VT-NUM: COUNTRY'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -790,6 +802,7 @@ class _ActivatePageState extends State<ActivatePage>
 
   Widget _buildPriceCard() {
     return Container(
+      key: FirstTimeAppGuide.anchorKey('activate', 'VT-NUM: DISPLAYED PRICE'),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -891,6 +904,7 @@ class _ActivatePageState extends State<ActivatePage>
         _isRequesting || selectedService == null || selectedCountry == null;
 
     return SizedBox(
+      key: FirstTimeAppGuide.anchorKey('activate', 'GET NUMBER'),
       height: 60,
       child: DecoratedBox(
         decoration: BoxDecoration(
