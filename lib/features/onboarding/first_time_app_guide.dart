@@ -387,6 +387,10 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
 
     final step = widget.steps[_index];
     widget.onStepChanged?.call(step.targetEn);
+    if (widget.onStepChanged != null) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+    }
     final key = FirstTimeAppGuide.anchorKey(widget.section, step.targetEn);
     final targetContext = key.currentContext;
 
