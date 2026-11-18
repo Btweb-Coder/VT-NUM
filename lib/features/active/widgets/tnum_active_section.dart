@@ -7,7 +7,12 @@ import '../../onboarding/first_time_app_guide.dart';
 import '../../orders/pages/tnum_operation_details_page.dart';
 
 class TnumActiveSection extends StatefulWidget {
-  const TnumActiveSection({super.key});
+  const TnumActiveSection({
+    super.key,
+    this.guideAnchorEnabled = true,
+  });
+
+  final bool guideAnchorEnabled;
 
   @override
   State<TnumActiveSection> createState() => _TnumActiveSectionState();
@@ -58,14 +63,20 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
             ],
           ),
           if (rows.isEmpty)
-            FirstTimeAppGuide.anchor(
-              'active',
-              'SMS / VERIFICATION CODE',
+            if (widget.guideAnchorEnabled)
+              FirstTimeAppGuide.anchor(
+                'active',
+                'SMS / VERIFICATION CODE',
+                Text(
+                  context.strings.text('tnum.no_active'),
+                  style: const TextStyle(color: Color(0xFFA5B4D0)),
+                ),
+              )
+            else
               Text(
                 context.strings.text('tnum.no_active'),
                 style: const TextStyle(color: Color(0xFFA5B4D0)),
               ),
-            ),
           ...rows.asMap().entries.map((entry) {
             final row = entry.value;
             final service = Map<String, dynamic>.from(
@@ -102,7 +113,7 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
                 ),
               ),
             );
-            return entry.key == 0
+            return entry.key == 0 && widget.guideAnchorEnabled
                 ? FirstTimeAppGuide.anchor(
                     'active',
                     'SMS / VERIFICATION CODE',
