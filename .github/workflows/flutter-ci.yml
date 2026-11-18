@@ -51,6 +51,7 @@ jobs:
           lib/features/wallet/pages/wallet_page.dart
           lib/app/router.dart
           lib/features/referrals
+          lib/core/widgets/activation_card.dart
           lib/core/services/auth_service.dart
 
       - name: Run Flutter tests
