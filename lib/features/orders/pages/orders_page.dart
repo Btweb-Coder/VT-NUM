@@ -10,6 +10,7 @@ import 'order_details_page.dart';
 import 'tnum_operation_details_page.dart';
 import '../../activate/data/tnum_repository.dart';
 import '../../activate/widgets/tnum_feedback.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 class _OrdersPremiumBackground extends StatefulWidget {
   final Widget child;
@@ -252,14 +253,19 @@ class _OrdersPageState extends State<OrdersPage> {
 
                       const SizedBox(height: 29),
 
-                      _buildSectionHeader(context, operationCount),
+                      FirstTimeAppGuide.anchor('history', 'HISTORY LIST', _buildSectionHeader(context, operationCount)),
 
                       const SizedBox(height: 16),
 
                       if (operationTiles.isEmpty)
                         _buildEmptyState(context)
                       else
-                        ...operationTiles.map((item) => item.child),
+                        ...operationTiles.asMap().entries.map((entry) {
+                          final item = entry.value;
+                          return entry.key == 0
+                              ? FirstTimeAppGuide.anchor('history', 'OPEN A HISTORY ITEM', item.child)
+                              : item.child;
+                        }),
                       if (historySnapshot.hasError)
                         Padding(
                           padding: const EdgeInsets.all(12),
@@ -275,7 +281,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
                       const SizedBox(height: 18),
 
-                      _buildFooter(context),
+                      FirstTimeAppGuide.anchor('history', 'ORIGIN AND STATUS', _buildFooter(context)),
                     ],
                   ),
                 );
