@@ -304,7 +304,8 @@ class FirstTimeAppGuide {
           _GuideStep('HISTORY LIST', 'LISTE DE L’HISTORIQUE',
             'Refresh the list', 'Actualisez la liste',
             'Pull the list down to refresh your records when you want to see the latest information.',
-            'Faites glisser la liste vers le bas pour actualiser les opérations et voir les dernières informations.'),
+            'Faites glisser la liste vers le bas pour actualiser les opérations et voir les dernières informations.',
+            allowTargetInteraction: false),
         ];
       case 'topup':
         return const [
@@ -418,7 +419,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
     widget.onStepChanged?.call(step.targetEn);
     if (widget.onStepChanged != null) {
       await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
+      if (!mounted || generation != _focusGeneration) return;
     }
     final key = FirstTimeAppGuide.anchorKey(widget.section, step.targetEn);
     BuildContext? targetContext;
@@ -448,7 +449,6 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
 
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted || generation != _focusGeneration) return;
-    if (!mounted) return;
 
     Rect? rect;
     final currentContext = key.currentContext;
@@ -547,7 +547,9 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
       bubbleTop = targetRect.top - bubbleHeight - 18;
     }
     final maxBubbleTop = size.height - bubbleHeight - 8.0;
-    bubbleTop = bubbleTop.clamp(8.0, maxBubbleTop >= 8.0 ? maxBubbleTop : 8.0).toDouble();
+    bubbleTop = bubbleTop
+        .clamp(8.0, maxBubbleTop >= 8.0 ? maxBubbleTop : 8.0)
+        .toDouble();
 
     return PopScope<void>(
       canPop: false,
