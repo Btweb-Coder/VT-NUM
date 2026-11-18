@@ -161,8 +161,30 @@ class OrdersPage extends StatefulWidget {
 }
 
 class _OrdersPageState extends State<OrdersPage> {
+  final ScrollController _guideScrollController = ScrollController();
   late Future<List<Map<String, dynamic>>> _tnumHistory = TnumRepository()
       .activations(history: true);
+
+  @override
+  void initState() {
+    super.initState();
+    FirstTimeAppGuide.registerReveal('history', () {
+      if (_guideScrollController.hasClients) {
+        _guideScrollController.animateTo(
+          _guideScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    FirstTimeAppGuide.unregisterReveal('history');
+    _guideScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +264,7 @@ class _OrdersPageState extends State<OrdersPage> {
                     );
                   },
                   child: ListView(
-                    key: FirstTimeAppGuide.anchorKey('history', 'PULL TO REFRESH'),
+                    controller: _guideScrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                     children: [
