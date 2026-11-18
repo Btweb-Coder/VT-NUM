@@ -291,11 +291,7 @@ class _ActivePageState extends State<ActivePage> {
                     }),
 
                   const SizedBox(height: 20),
-                  FirstTimeAppGuide.anchor(
-                    'active',
-                    'SMS / VERIFICATION CODE',
-                    const TnumActiveSection(),
-                  ),
+                  const TnumActiveSection(),
 
                   const SizedBox(height: 18),
 
