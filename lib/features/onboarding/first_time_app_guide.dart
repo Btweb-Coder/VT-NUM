@@ -553,8 +553,8 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
         ? size.height - 16
         : math.max(availableBelow, availableAbove);
     final bubbleHeight = math
-        .min(390.0, math.max(100.0, availableHeight))
-        .clamp(100.0, math.max(100.0, size.height - 16))
+        .min(390.0, math.max(160.0, availableHeight))
+        .clamp(160.0, math.max(160.0, size.height - 16))
         .toDouble();
 
     double bubbleTop;
@@ -570,221 +570,261 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
         .clamp(8.0, maxBubbleTop >= 8.0 ? maxBubbleTop : 8.0)
         .toDouble();
 
+    final header = Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF4776FF), Color(0xFF8B5CF6)],
+            ),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: const Icon(
+            Icons.lightbulb_outline_rounded,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.french ? 'GUIDE PAS À PAS' : 'FIRST-TIME APP GUIDE',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                _sectionTitle,
+                style: const TextStyle(
+                  color: Color(0xFF9FB5E6),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.7,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    final progressIndicator = ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: LinearProgressIndicator(
+        value: progress,
+        minHeight: 5,
+        backgroundColor: Colors.white.withValues(alpha: 0.08),
+        valueColor: const AlwaysStoppedAnimation(Color(0xFF6E8BFF)),
+      ),
+    );
+
+    final targetLine = Row(
+      children: [
+        const Icon(
+          Icons.touch_app_rounded,
+          color: Color(0xFF8FB6FF),
+          size: 20,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            target,
+            style: const TextStyle(
+              color: Color(0xFF8FB6FF),
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.45,
+            ),
+          ),
+        ),
+        Text(
+          count,
+          style: const TextStyle(color: Color(0xFF8393B3), fontSize: 11),
+        ),
+      ],
+    );
+
+    final stepContent = AnimatedSwitcher(
+      duration: const Duration(milliseconds: 240),
+      child: Column(
+        key: ValueKey<int>(_index),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 21,
+              height: 1.2,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 10),
+          TweenAnimationBuilder<double>(
+            key: ValueKey<String>('spotlight-typed-$_index'),
+            tween: Tween(begin: 0, end: 1),
+            duration: Duration(
+              milliseconds: (body.length * 12).clamp(700, 1500).toInt(),
+            ),
+            curve: Curves.easeOut,
+            builder: (context, value, _) {
+              final visible = (body.length * value)
+                  .round()
+                  .clamp(0, body.length)
+                  .toInt();
+              return Text(
+                body.substring(0, visible),
+                style: const TextStyle(
+                  color: Color(0xFFC1CBE0),
+                  fontSize: 13,
+                  height: 1.6,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    final navigation = Row(
+      children: [
+        TextButton(
+          onPressed: () => widget.onComplete(_GuideResult.skipAll),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFB9C8E8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          ),
+          child: Text(widget.french ? 'Ignorer' : 'Skip'),
+        ),
+        const Spacer(),
+        if (_index > 0) ...[
+          OutlinedButton(
+            onPressed: _back,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+            child: Text(widget.french ? 'Précédent' : 'Back'),
+          ),
+          const SizedBox(width: 8),
+        ],
+        FilledButton(
+          onPressed: _next,
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF4776FF),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          ),
+          child: Text(
+            _index == widget.steps.length - 1
+                ? (widget.french ? 'Terminer' : 'Finish')
+                : (widget.french ? 'Suivant' : 'Next'),
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
+    );
+
+    final footerNote = Text(
+      widget.french
+          ? 'Le guide ne réalise aucun achat ni paiement.'
+          : 'The guide never makes a purchase or payment.',
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        color: Color(0xFF7788A9),
+        fontSize: 10,
+        height: 1.4,
+      ),
+    );
+
     return PopScope<void>(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) widget.onComplete(_GuideResult.skipAll);
       },
       child: _SpotlightHitTestRegion(
-      holeRect: _targetReady && step.allowTargetInteraction ? targetRect : null,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          IgnorePointer(
-            child: CustomPaint(
-              painter: _SpotlightPainter(targetRect: targetRect?.inflate(7)),
+        holeRect: _targetReady && step.allowTargetInteraction ? targetRect : null,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            IgnorePointer(
+              child: CustomPaint(
+                painter: _SpotlightPainter(targetRect: targetRect?.inflate(7)),
+              ),
             ),
-          ),
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {},
-              child: const SizedBox.expand(),
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {},
+                child: const SizedBox.expand(),
+              ),
             ),
-          ),
-          Positioned(
-            left: (size.width - bubbleWidth) / 2,
-            top: bubbleTop,
-            width: bubbleWidth,
-            child: Material(
-              color: const Color(0xFF101A31),
-              elevation: 24,
-              shadowColor: Colors.black.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(24),
-              clipBehavior: Clip.antiAlias,
-              child: Container(
-                constraints: BoxConstraints(maxHeight: bubbleHeight),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: const Color(0xFF7199FF).withValues(alpha: 0.55),
+            Positioned(
+              left: (size.width - bubbleWidth) / 2,
+              top: bubbleTop,
+              width: bubbleWidth,
+              child: Material(
+                color: const Color(0xFF101A31),
+                elevation: 24,
+                shadowColor: Colors.black.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(24),
+                clipBehavior: Clip.antiAlias,
+                child: Container(
+                  height: bubbleHeight,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: const Color(0xFF7199FF).withValues(alpha: 0.55),
+                    ),
                   ),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF4776FF), Color(0xFF8B5CF6)],
-                              ),
-                              borderRadius: BorderRadius.circular(13),
-                            ),
-                            child: const Icon(
-                              Icons.lightbulb_outline_rounded,
-                              color: Colors.white,
-                            ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              header,
+                              const SizedBox(height: 15),
+                              progressIndicator,
+                              const SizedBox(height: 14),
+                              targetLine,
+                              const SizedBox(height: 13),
+                              stepContent,
+                            ],
                           ),
-                          const SizedBox(width: 11),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.french ? 'GUIDE PAS À PAS' : 'FIRST-TIME APP GUIDE',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 12,
-                                    letterSpacing: 0.4,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  _sectionTitle,
-                                  style: const TextStyle(
-                                    color: Color(0xFF9FB5E6),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.7,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => widget.onComplete(_GuideResult.skipAll),
-                            child: Text(widget.french ? 'Ignorer' : 'Skip'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 5,
-                          backgroundColor: Colors.white.withValues(alpha: 0.08),
-                          valueColor: const AlwaysStoppedAnimation(Color(0xFF6E8BFF)),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          const Icon(Icons.touch_app_rounded, color: Color(0xFF8FB6FF), size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              target,
-                              style: const TextStyle(
-                                color: Color(0xFF8FB6FF),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.45,
-                              ),
-                            ),
-                          ),
-                          Text(count, style: const TextStyle(color: Color(0xFF8393B3), fontSize: 11)),
-                        ],
-                      ),
-                      const SizedBox(height: 13),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 240),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
                         child: Column(
-                          key: ValueKey<int>(_index),
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 21,
-                                height: 1.2,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            TweenAnimationBuilder<double>(
-                              key: ValueKey<String>('spotlight-typed-$_index'),
-                              tween: Tween(begin: 0, end: 1),
-                              duration: Duration(milliseconds: (body.length * 12).clamp(700, 1500).toInt()),
-                              curve: Curves.easeOut,
-                              builder: (context, value, _) {
-                                final visible = (body.length * value).round().clamp(0, body.length).toInt();
-                                return Text(
-                                  body.substring(0, visible),
-                                  style: const TextStyle(
-                                    color: Color(0xFFC1CBE0),
-                                    fontSize: 13,
-                                    height: 1.6,
-                                  ),
-                                );
-                              },
-                            ),
+                            navigation,
+                            const SizedBox(height: 5),
+                            footerNote,
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 18),
-                      Row(
-                        children: [
-                          if (_index > 0)
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: _back,
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                                  padding: const EdgeInsets.symmetric(vertical: 13),
-                                ),
-                                child: Text(widget.french ? 'Précédent' : 'Back'),
-                              ),
-                            )
-                          else
-                            const Spacer(),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            flex: 2,
-                            child: FilledButton(
-                              onPressed: _next,
-                              style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFF4776FF),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 13),
-                              ),
-                              child: Text(
-                                _index == widget.steps.length - 1
-                                    ? (widget.french ? 'Terminer' : 'Finish')
-                                    : (widget.french ? 'Suivant' : 'Next'),
-                                style: const TextStyle(fontWeight: FontWeight.w800),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        widget.french
-                            ? 'Le guide ne réalise aucun achat ni paiement. Vous pouvez l’ignorer.'
-                            : 'The guide never makes a purchase or payment. You can skip it.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF7788A9), fontSize: 10, height: 1.4),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 }
