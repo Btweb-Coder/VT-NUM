@@ -242,6 +242,7 @@ class _OrdersPageState extends State<OrdersPage> {
                     );
                   },
                   child: ListView(
+                    key: FirstTimeAppGuide.anchorKey('history', 'PULL TO REFRESH'),
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                     children: [
@@ -263,7 +264,15 @@ class _OrdersPageState extends State<OrdersPage> {
                         ...operationTiles.asMap().entries.map((entry) {
                           final item = entry.value;
                           return entry.key == 0
-                              ? FirstTimeAppGuide.anchor('history', 'OPEN A HISTORY ITEM', item.child)
+                              ? FirstTimeAppGuide.anchor(
+                                  'history',
+                                  'ORIGIN AND STATUS',
+                                  FirstTimeAppGuide.anchor(
+                                    'history',
+                                    'OPEN A HISTORY ITEM',
+                                    item.child,
+                                  ),
+                                )
                               : item.child;
                         }),
                       if (historySnapshot.hasError)
@@ -281,7 +290,7 @@ class _OrdersPageState extends State<OrdersPage> {
 
                       const SizedBox(height: 18),
 
-                      FirstTimeAppGuide.anchor('history', 'ORIGIN AND STATUS', _buildFooter(context)),
+                      _buildFooter(context),
                     ],
                   ),
                 );
