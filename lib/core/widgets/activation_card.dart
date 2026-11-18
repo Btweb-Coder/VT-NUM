@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../app/localization/app_localizations.dart';
 import '../../app/theme/colors.dart';
+import '../../features/onboarding/first_time_app_guide.dart';
 import '../models/activation.dart';
 
 class ActivationCard extends StatelessWidget {
@@ -10,12 +11,14 @@ class ActivationCard extends StatelessWidget {
 
   final VoidCallback? onCancel;
   final VoidCallback? onGetAnotherNumber;
+  final bool showGuideSmsAnchor;
 
   const ActivationCard({
     super.key,
     required this.activation,
     this.onCancel,
     this.onGetAnotherNumber,
+    this.showGuideSmsAnchor = false,
   });
 
   @override
@@ -61,15 +64,24 @@ final isProcessing = activation.isProcessing && !isReplaced;
 
           const SizedBox(height: 20),
 
-          if (isReplaced) ...[
-  _replacedSection(context),
-] else if (hasCode) ...[
-  _codeSection(context),
-] else if (isExpired) ...[
-  _expiredSection(context),
-] else ...[
-  _waitingSection(context),
-],
+          if (showGuideSmsAnchor)
+            FirstTimeAppGuide.anchor(
+              'active',
+              'SMS / VERIFICATION CODE',
+              _smsSection(
+                context,
+                isReplaced: isReplaced,
+                hasCode: hasCode,
+                isExpired: isExpired,
+              ),
+            )
+          else
+            _smsSection(
+              context,
+              isReplaced: isReplaced,
+              hasCode: hasCode,
+              isExpired: isExpired,
+            ),
 
           const SizedBox(height: 18),
 
@@ -307,6 +319,18 @@ Widget _statusBadge(BuildContext context, {
         ),
       ],
     );
+  }
+
+  Widget _smsSection(
+    BuildContext context, {
+    required bool isReplaced,
+    required bool hasCode,
+    required bool isExpired,
+  }) {
+    if (isReplaced) return _replacedSection(context);
+    if (hasCode) return _codeSection(context);
+    if (isExpired) return _expiredSection(context);
+    return _waitingSection(context);
   }
 
   // ============================================================
