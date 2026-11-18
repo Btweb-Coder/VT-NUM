@@ -682,7 +682,7 @@ class _HomePageState extends State<HomePage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                    ),
+                    )),
                   ],
                 ],
               ),
