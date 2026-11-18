@@ -1236,6 +1236,7 @@ setState(() {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
+                              key: FirstTimeAppGuide.anchorKey('auth', 'ACCOUNT ENTRY'),
                               isRegistering
                                   ? context.strings.text('auth.create_account')
                                   : context.strings.text('auth.secure_login'),
@@ -1260,6 +1261,7 @@ setState(() {
 
                             // E-mail.
                             TextFormField(
+                              key: FirstTimeAppGuide.anchorKey('auth', 'EMAIL FIELD'),
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
                               autofillHints: const [AutofillHints.email],
@@ -1288,6 +1290,7 @@ setState(() {
 
                             // Mot de passe.
                             TextFormField(
+                              key: FirstTimeAppGuide.anchorKey('auth', 'PASSWORD FIELD'),
                               controller: _passwordController,
                               obscureText: _obscurePassword,
                               enabled: !_submitting,
@@ -1337,6 +1340,7 @@ setState(() {
                             if (isRegistering) ...[
                               const SizedBox(height: 17),
                               TextFormField(
+                                key: FirstTimeAppGuide.anchorKey('auth', 'REFERRAL CODE (OPTIONAL)'),
                                 controller: _referralCodeController,
                                 enabled: !_submitting,
                                 textCapitalization: TextCapitalization.characters,
@@ -1373,6 +1377,486 @@ setState(() {
                                   ),
                                 ),
                                 child: CheckboxListTile(
+                                  key: FirstTimeAppGuide.anchorKey('auth', 'TERMS CHECKBOX'),
+                                  value: _acceptedTerms,
+                                  onChanged: _submitting
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            _acceptedTerms = value ?? false;
+                                          });
+                                        },
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  contentPadding: EdgeInsets.zero,
+                                  dense: true,
+                                  activeColor: const Color(0xFF4788FF),
+                                  checkColor: Colors.white,
+                                  title: Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      Text(
+                                        context.strings.text('auth.terms_agree_prefix'),
+                                        style: TextStyle(
+                                          color: Color(0xFFD5DFF5),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      InkWell(
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const TermsConditionsPage(),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          context.strings.text('auth.terms_link'),
+                                          style: TextStyle(
+                                            color: Color(0xFF83B6FF),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            decoration:
+                                                TextDecoration.underline,
+                                            decorationColor:
+                                                Color(0xFF83B6FF),
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        context.strings.text('auth.terms_agree_suffix'),
+                                        style: TextStyle(
+                                          color: Color(0xFFD5DFF5),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 24),
+
+                            // Bouton principal.
+                            SizedBox(
+                              height: 57,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: _submitting
+                                        ? const [
+                                            Color(0xFF5478B9),
+                                            Color(0xFF405D9B),
+                                          ]
+                                        : const [
+                                            Color(0xFF69A5FF),
+                                            Color(0xFF426BFF),
+                                            Color(0xFF7D55F8),
+                                          ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: _submitting
+                                      ? const []
+                                      : [
+                                          BoxShadow(
+                                            color: const Color(0xFF426BFF)
+                                                .withValues(alpha: 0.27),
+                                            blurRadius: 22,
+                                            offset: const Offset(0, 8),
+                                          ),
+                                        ],
+                                ),
+                                class _SignInPageState extends State<SignInPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _referralCodeController = TextEditingController();
+
+  bool _registering = false;
+  bool _submitting = false;
+  bool _obscurePassword = true;
+  bool _acceptedTerms = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _prepareFirstTimeGuide();
+  }
+
+  Future<void> _prepareFirstTimeGuide() async {
+    if (!await FirstTimeAppGuide.isPending() ||
+        await FirstTimeAppGuide.isSectionCompleted('auth') ||
+        !mounted) {
+      return;
+    }
+    setState(() => _registering = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        FirstTimeAppGuide.showIfNeeded(context, 'auth');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _referralCodeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+  if (_submitting) return;
+
+  // Acceptation obligatoire des CGU avant toute inscription
+  if (_registering && !_acceptedTerms) {
+    await _showSweetAlert(
+      context,
+      title: context.strings.text('auth.acceptance_required'),
+      message: context.strings.text('auth.terms_required_message'),
+      type: _AlertType.info,
+      buttonText: context.strings.text('auth.ok'),
+    );
+    return;
+  }
+
+  if (!(_formKey.currentState?.validate() ?? false)) return;
+
+  FocusScope.of(context).unfocus();
+  setState(() => _submitting = true);
+
+  try {
+      if (_registering) {
+        FirstTimeAppGuide.beginRegistrationAttempt();
+        await widget.authService.register(
+          email: _emailController.text,
+          password: _passwordController.text,
+          referralCode: _referralCodeController.text,
+        );
+        await FirstTimeAppGuide.markRegistrationCompleted();
+
+        if (!mounted) return;
+
+       await _showSweetAlert(
+  context,
+  title: context.strings.text('auth.registration_success'),
+  message: context.strings.text('auth.registration_message', variables: {'email': _emailController.text.trim()}),
+  type: _AlertType.success,
+  buttonText: context.strings.text('common.confirm'),
+);
+
+if (!mounted) return;
+
+setState(() {
+  _registering = false;
+  _acceptedTerms = false;
+  _passwordController.clear();
+  _referralCodeController.clear();
+});
+      } else {
+        await widget.authService.signIn(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+        await FirstTimeAppGuide.handleSignInSuccess();
+      }
+    } on AuthException catch (error) {
+      if (!mounted) return;
+
+      await _showSweetAlert(
+        context,
+        title: _registering ? context.strings.text('auth.registration_failed') : context.strings.text('auth.login_failed'),
+        message: _friendlyAuthError(context, error),
+        type: _AlertType.error,
+        buttonText: context.strings.text('common.retry'),
+      );
+    } catch (_) {
+      if (!mounted) return;
+
+      await _showSweetAlert(
+        context,
+        title: _registering ? context.strings.text('auth.registration_failed') : context.strings.text('auth.login_error'),
+        message: context.strings.text('auth.unexpected_internet_error'),
+        type: _AlertType.error,
+        buttonText: context.strings.text('common.retry'),
+      );
+    } finally {
+      FirstTimeAppGuide.endRegistrationAttempt();
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+    @override
+  Widget build(BuildContext context) {
+    final isRegistering = _registering;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF050817),
+      body: _PremiumStarfield(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 12),
+
+                      // Logo / marque.
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.bolt_rounded,
+                            color: Color(0xFF83B6FF),
+                            size: 24,
+                          ),
+                          SizedBox(width: 7),
+                          Text(
+                            'VT NUM',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 3,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // SIM virtuelle flottante.
+                      const Center(
+                        child: _PremiumSimCard(),
+                      ),
+
+                      const SizedBox(height: 34),
+
+                      // Titre animÃ©.
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 350),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.12),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Column(
+                          key: ValueKey(isRegistering),
+                          children: [
+                            Text(
+                              isRegistering
+                                  ? context.strings.text('auth.join_vtnum')
+                                  : context.strings.text('auth.digital_world'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                height: 1.2,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              isRegistering
+                                  ? context.strings.text('auth.register_subtitle')
+                                  : context.strings.text('auth.login_subtitle'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Color(0xFFABB8D6),
+                                fontSize: 14,
+                                height: 1.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // Carte contenant le formulaire.
+                      Container(
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF111A32)
+                              .withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(26),
+                          border: Border.all(
+                            color: const Color(0xFF7EA9FF)
+                                .withValues(alpha: 0.18),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 30,
+                              offset: const Offset(0, 15),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              key: FirstTimeAppGuide.anchorKey('auth', 'ACCOUNT ENTRY'),
+                              isRegistering
+                                  ? context.strings.text('auth.create_account')
+                                  : context.strings.text('auth.secure_login'),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+
+                            const SizedBox(height: 7),
+
+                            Text(
+                              context.strings.text('auth.privacy_notice'),
+                              style: TextStyle(
+                                color: Color(0xFF94A6CB),
+                                fontSize: 12,
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // E-mail.
+                            TextFormField(
+                              key: FirstTimeAppGuide.anchorKey('auth', 'EMAIL FIELD'),
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              autofillHints: const [AutofillHints.email],
+                              enabled: !_submitting,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                              cursorColor: const Color(0xFF83B6FF),
+                              decoration: _premiumInputDecoration(
+                                label: context.strings.text('auth.email'),
+                                icon: Icons.alternate_email_rounded,
+                              ),
+                              validator: (value) {
+                                final email = value?.trim() ?? '';
+
+                                return RegExp(
+                                  r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                                ).hasMatch(email)
+                                    ? null
+                                    : context.strings.text('auth.invalid_email');
+                              },
+                            ),
+
+                            const SizedBox(height: 17),
+
+                            // Mot de passe.
+                            TextFormField(
+                              key: FirstTimeAppGuide.anchorKey('auth', 'PASSWORD FIELD'),
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              enabled: !_submitting,
+                              autofillHints: isRegistering
+                                  ? const [AutofillHints.newPassword]
+                                  : const [AutofillHints.password],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                              cursorColor: const Color(0xFF83B6FF),
+                              decoration: _premiumInputDecoration(
+                                label: context.strings.text('auth.password'),
+                                icon: Icons.lock_outline_rounded,
+                                suffix: IconButton(
+                                  onPressed: _submitting
+                                      ? null
+                                      : () {
+                                          setState(() {
+                                            _obscurePassword =
+                                                !_obscurePassword;
+                                          });
+                                        },
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: const Color(0xFF9AAED3),
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return context.strings.text('auth.password_required');
+                                }
+
+                                if (value.length < 8) {
+                                  return context.strings.text('auth.password_min_length');
+                                }
+
+                                return null;
+                              },
+                            ),
+
+                            // Optional referral code. Kept separate from existing auth and terms flow.
+                            if (isRegistering) ...[
+                              const SizedBox(height: 17),
+                              TextFormField(
+                                key: FirstTimeAppGuide.anchorKey('auth', 'REFERRAL CODE (OPTIONAL)'),
+                                controller: _referralCodeController,
+                                enabled: !_submitting,
+                                textCapitalization: TextCapitalization.characters,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+                                  LengthLimitingTextInputFormatter(10),
+                                ],
+                                style: const TextStyle(color: Colors.white, fontSize: 14),
+                                cursorColor: const Color(0xFF83B6FF),
+                                decoration: _premiumInputDecoration(
+                                  label: context.strings.text('referral.signup_code'),
+                                  icon: Icons.card_giftcard_rounded,
+                                ).copyWith(
+                                  helperText: context.strings.text('referral.signup_optional'),
+                                  helperStyle: const TextStyle(color: Color(0xFF94A6CB), fontSize: 11),
+                                ),
+                              ),
+                            ],
+
+                            // CGU : obligatoires pendant l'inscription.
+                            if (isRegistering) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.035),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: Colors.white
+                                        .withValues(alpha: 0.08),
+                                  ),
+                                ),
+                                child: CheckboxListTile(
+                                  key: FirstTimeAppGuide.anchorKey('auth', 'TERMS CHECKBOX'),
                                   value: _acceptedTerms,
                                   onChanged: _submitting
                                       ? null
@@ -1465,6 +1949,7 @@ setState(() {
                                         ],
                                 ),
                                 child: ElevatedButton(
+                        key: FirstTimeAppGuide.anchorKey('auth', 'CREATE ACCOUNT / LOG IN'),
                                   onPressed:
                                       _submitting ? null : _submit,
                                   style: ElevatedButton.styleFrom(
