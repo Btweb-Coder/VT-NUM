@@ -179,8 +179,9 @@ class FirstTimeAppGuide {
             'Lors de l’inscription, cochez cette case pour accepter les conditions. Vous pouvez ouvrir le lien pour les lire avant.'),
           _GuideStep('CREATE ACCOUNT / LOG IN', 'CRÉER UN COMPTE / SE CONNECTER',
             'Finish creating your account', 'Terminez la création du compte',
-            'Tap Create account once. Follow the email verification instructions, then return and choose Log in. Existing users can switch to Log in at the bottom.',
-            'Touchez Créer un compte une seule fois. Suivez les instructions de vérification reçues par e-mail, puis revenez choisir Se connecter. Les utilisateurs déjà inscrits peuvent choisir Se connecter en bas.'),
+            'When you are ready, use Create account once. Follow the email verification instructions, then return and choose Log in. Existing users can switch to Log in at the bottom.',
+            'Lorsque vous êtes prêt, utilisez Créer un compte une seule fois. Suivez les instructions de vérification reçues par e-mail, puis revenez choisir Se connecter. Les utilisateurs déjà inscrits peuvent choisir Se connecter en bas.',
+            allowTargetInteraction: false),
         ];
       case 'home':
         return const [
@@ -225,24 +226,27 @@ class FirstTimeAppGuide {
             'Lisez le prix client affiché avant de continuer. Votre solde disponible doit couvrir ce prix.'),
           _GuideStep('GET NUMBER', 'OBTENIR UN NUMÉRO',
             'Request the number', 'Demandez le numéro',
-            'Tap Get number and read the confirmation carefully. Confirm only if the service, country and price are correct. Do not tap repeatedly while the request is processing.',
-            'Touchez Obtenir un numéro et lisez attentivement la confirmation. Confirmez uniquement si le service, le pays et le prix sont corrects. Ne touchez pas plusieurs fois pendant le traitement.'),
+            'When you are ready to request a number, tap Get number and read the confirmation carefully. Confirm only if the service, country and price are correct. Do not tap repeatedly while the request is processing.',
+            'Lorsque vous êtes prêt à demander un numéro, touchez Obtenir un numéro et lisez attentivement la confirmation. Confirmez uniquement si le service, le pays et le prix sont corrects. Ne touchez pas plusieurs fois pendant le traitement.',
+            allowTargetInteraction: false),
           _GuideStep('T-NUM: COUNTRY AND SERVICE', 'T-NUM : PAYS ET SERVICE',
             'Choose with T-NUM', 'Choisissez avec T-NUM',
             'Switch to Server 2. Choose the country, then select the service from the available list. Use the search field to find a service faster.',
             'Passez à Server 2. Choisissez le pays, puis le service dans la liste proposée. Utilisez la recherche pour trouver le service plus rapidement.'),
           _GuideStep('T-NUM: PRICE AND PURCHASE', 'T-NUM : PRIX ET ACHAT',
             'Review before buying', 'Vérifiez avant l’achat',
-            'Check the displayed customer price and tap the purchase button. Confirm the price in the confirmation window to request the number.',
-            'Vérifiez le prix client affiché et touchez le bouton d’achat. Confirmez le prix dans la fenêtre de confirmation pour demander le numéro.'),
+            'Check the displayed customer price. When you are ready, use the purchase button and confirm the price in the confirmation window to request the number.',
+            'Vérifiez le prix client affiché. Lorsque vous êtes prêt, utilisez le bouton d’achat et confirmez le prix dans la fenêtre de confirmation pour demander le numéro.',
+            allowTargetInteraction: false),
           _GuideStep('NUMBER AND SMS', 'NUMÉRO ET SMS',
             'Receive your verification code', 'Recevez votre code de vérification',
-            'When the number appears, enter it in the app or website you are verifying. Keep the activation open and wait for the SMS. Copy the code when it arrives.',
-            'Quand le numéro apparaît, saisissez-le dans l’application ou le site à vérifier. Gardez l’activation ouverte et attendez le SMS. Copiez le code dès son arrivée.'),
-          _GuideStep('INSUFFICIENT BALANCE', 'SOLDE INSUFFISANT',
+            'After a T-NUM purchase, your activation appears in this section. Open it to follow the number and SMS status. Copy the code when it arrives.',
+            'Après un achat T-NUM, votre activation apparaît dans cette section. Ouvrez-la pour suivre le numéro et le statut du SMS. Copiez le code dès son arrivée.',
+            allowTargetInteraction: false),
+          _GuideStep('VT-NUM: DISPLAYED PRICE', 'VT-NUM : PRIX AFFICHÉ',
             'What if your balance is too low?', 'Que faire si votre solde est insuffisant ?',
-            'Use the Top up wallet action in the insufficient-balance message. Add funds, return to Activate and try again. This guide never buys a number for you.',
-            'Utilisez le bouton Recharger dans le message de solde insuffisant. Ajoutez des fonds, revenez dans Activer et réessayez. Ce guide n’achète jamais un numéro à votre place.'),
+            'If your available balance cannot cover this price, use the top-up option shown by the insufficient-balance message. Return to Activate after the recharge. This guide never requests a number for you.',
+            'Si votre solde disponible ne couvre pas ce prix, utilisez l’option de recharge proposée dans le message de solde insuffisant. Revenez dans Activer après la recharge. Ce guide ne demande jamais un numéro à votre place.'),
         ];
       case 'active':
         return const [
@@ -257,11 +261,13 @@ class FirstTimeAppGuide {
           _GuideStep('SMS / VERIFICATION CODE', 'SMS / CODE DE VÉRIFICATION',
             'Copy the SMS code', 'Copiez le code SMS',
             'When the SMS arrives, open the operation details. Use the copy control and paste the code into the app or website that requested it.',
-            'À l’arrivée du SMS, ouvrez les détails de l’opération. Utilisez le bouton de copie et collez le code dans l’application ou le site qui l’a demandé.'),
+            'À l’arrivée du SMS, ouvrez les détails de l’opération. Utilisez le bouton de copie et collez le code dans l’application ou le site qui l’a demandé.',
+            allowTargetInteraction: false),
           _GuideStep('AVAILABLE ACTIONS', 'ACTIONS DISPONIBLES',
             'Follow the operation', 'Suivez l’opération',
             'Use the refresh or action buttons shown for an operation when needed. Read the confirmation before completing or cancelling anything.',
-            'Utilisez les boutons d’actualisation ou d’action disponibles si nécessaire. Lisez la confirmation avant de terminer ou d’annuler une opération.'),
+            'Utilisez les boutons d’actualisation ou d’action disponibles si nécessaire. Lisez la confirmation avant de terminer ou d’annuler une opération.',
+            allowTargetInteraction: false),
         ];
       case 'history':
         return const [
@@ -302,8 +308,9 @@ class FirstTimeAppGuide {
             'Vérifiez le montant à créditer, les frais, le taux de change et le total demandé. En cas d’erreur, fermez le formulaire et corrigez vos saisies avant de payer.'),
           _GuideStep('REQUEST PAYMENT', 'DEMANDER LE PAIEMENT',
             'Approve the payment', 'Validez le paiement',
-            'Tap Request payment once, then approve the prompt on your phone. Keep the screen open while the payment is checked. Your wallet is credited only after success is confirmed.',
-            'Touchez Demander le paiement une seule fois, puis validez la demande sur votre téléphone. Gardez l’écran ouvert pendant la vérification. Votre portefeuille est crédité uniquement après confirmation de la réussite.'),
+            'When you are ready, tap Request payment once, then approve the prompt on your phone. Keep the screen open while the payment is checked. Your wallet is credited only after success is confirmed.',
+            'Lorsque vous êtes prêt, touchez Demander le paiement une seule fois, puis validez la demande sur votre téléphone. Gardez l’écran ouvert pendant la vérification. Votre portefeuille est crédité uniquement après confirmation de la réussite.',
+            allowTargetInteraction: false),
         ];
       default:
         return const [];
@@ -314,8 +321,10 @@ class FirstTimeAppGuide {
 class _GuideStep {
   const _GuideStep(
     this.targetEn, this.targetFr, this.titleEn, this.titleFr,
-    this.bodyEn, this.bodyFr,
-  );
+    this.bodyEn, this.bodyFr, {
+    this.allowTargetInteraction = true,
+  });
+  final bool allowTargetInteraction;
   final String targetEn;
   final String targetFr;
   final String titleEn;
@@ -503,8 +512,13 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
     final maxBubbleTop = size.height - bubbleHeight - 8.0;
     bubbleTop = bubbleTop.clamp(8.0, maxBubbleTop >= 8.0 ? maxBubbleTop : 8.0).toDouble();
 
-    return _SpotlightHitTestRegion(
-      holeRect: targetRect,
+    return PopScope<void>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) widget.onComplete(_GuideResult.skipAll);
+      },
+      child: _SpotlightHitTestRegion(
+      holeRect: _targetReady && step.allowTargetInteraction ? targetRect : null,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -712,6 +726,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
           ),
         ],
       ),
+    ),
     );
   }
 }
