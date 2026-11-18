@@ -259,7 +259,15 @@ class _OrdersPageState extends State<OrdersPage> {
                       const SizedBox(height: 16),
 
                       if (operationTiles.isEmpty)
-                        _buildEmptyState(context)
+                        FirstTimeAppGuide.anchor(
+                          'history',
+                          'ORIGIN AND STATUS',
+                          FirstTimeAppGuide.anchor(
+                            'history',
+                            'OPEN A HISTORY ITEM',
+                            _buildEmptyState(context),
+                          ),
+                        )
                       else
                         ...operationTiles.asMap().entries.map((entry) {
                           final item = entry.value;
