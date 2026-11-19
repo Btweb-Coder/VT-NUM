@@ -549,7 +549,7 @@ class _ActivatePageState extends State<ActivatePage>
 
         const SizedBox(height: 24),
 
-        FirstTimeAppGuide.anchor('activate', 'INSUFFICIENT BALANCE', _buildGetNumberButton()),
+        _buildGetNumberButton(),
       ],
     );
   }
