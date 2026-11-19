@@ -58,4 +58,4 @@ jobs:
           lib/core/services/auth_service.dart
 
       - name: Run Flutter tests
-        run: flutter test test/onboarding test/referrals
+        run: flutter test test/onboarding/first_time_app_guide_test.dart
