@@ -294,8 +294,8 @@ class FirstTimeAppGuide {
         return const [
           _GuideStep('HISTORY LIST', 'LISTE DE L’HISTORIQUE',
             'Your previous activations', 'Vos anciennes activations',
-            'History combines your VT-NUM and T-NUM activation records. The newest operations appear first.',
-            'L’historique rassemble vos activations VT-NUM et T-NUM. Les opérations les plus récentes apparaissent en premier.',
+            'History combines your VT-NUM and T-NUM activation records. The newest operations appear first. After the guide, pull down on the list to refresh it.',
+            'L’historique rassemble vos activations VT-NUM et T-NUM. Les opérations les plus récentes apparaissent en premier. Après le guide, tirez la liste vers le bas pour l’actualiser.',
             allowTargetInteraction: false),
           _GuideStep('ORIGIN AND STATUS', 'ORIGINE ET STATUT',
             'Understand each record', 'Comprenez chaque opération',
@@ -306,11 +306,6 @@ class FirstTimeAppGuide {
             'See the details', 'Consultez les détails',
             'After you finish the guide, tap any record to open its details and review the number, available SMS information and operation status.',
             'Après le guide, touchez une opération pour ouvrir ses détails et revoir le numéro, les informations SMS disponibles et son statut.',
-            allowTargetInteraction: false),
-          _GuideStep('HISTORY LIST', 'LISTE DE L’HISTORIQUE',
-            'Refresh the list', 'Actualisez la liste',
-            'After the guide, pull the list down to refresh your records when you want to see the latest information.',
-            'Après le guide, faites glisser la liste vers le bas pour actualiser les opérations et voir les dernières informations.',
             allowTargetInteraction: false),
         ];
       case 'topup':
