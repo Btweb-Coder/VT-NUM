@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: flutter-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: flutter-ci-${{ github.workflow }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
