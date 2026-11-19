@@ -1,12 +1,14 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'terms_conditions_page.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/colors.dart';
 import '../../../core/services/auth_service.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 enum _AlertType { success, error, info }
 
@@ -152,6 +154,10 @@ String _friendlyAuthError(BuildContext context, AuthException error) {
     return context.strings.text('auth.errors.email_already_registered');
   }
 
+  if (message.contains('INVALID_OR_UNAVAILABLE_REFERRAL_CODE')) {
+    return context.strings.text('referral.invalid_code');
+  }
+
   if (message.contains('password')) {
     return context.strings.text('auth.errors.password_requirements');
   }
@@ -194,8 +200,13 @@ class _AuthGateState extends State<AuthGate> {
     super.initState();
 
     _authSubscription = widget.authService.authStateChanges.listen(
-      (state) {
+      (state) async {
         if (!mounted) return;
+
+        if (state.session?.user.emailConfirmedAt != null) {
+          await FirstTimeAppGuide.handleSignInSuccess();
+          if (!mounted) return;
+        }
 
         // A confirmed session created by the email callback must not open the app.
         // Only accept signedIn events initiated by the manual email/password form.
@@ -982,6 +993,7 @@ class _SignInPageState extends State<SignInPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _referralCodeController = TextEditingController();
 
   bool _registering = false;
   bool _submitting = false;
@@ -989,9 +1001,30 @@ class _SignInPageState extends State<SignInPage> {
   bool _acceptedTerms = false;
 
   @override
+  void initState() {
+    super.initState();
+    _prepareFirstTimeGuide();
+  }
+
+  Future<void> _prepareFirstTimeGuide() async {
+    if (!await FirstTimeAppGuide.isPending() ||
+        await FirstTimeAppGuide.isSectionCompleted('auth') ||
+        !mounted) {
+      return;
+    }
+    setState(() => _registering = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        FirstTimeAppGuide.showIfNeeded(context, 'auth');
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 
@@ -1017,10 +1050,13 @@ class _SignInPageState extends State<SignInPage> {
 
   try {
       if (_registering) {
+        FirstTimeAppGuide.beginRegistrationAttempt();
         await widget.authService.register(
           email: _emailController.text,
           password: _passwordController.text,
+          referralCode: _referralCodeController.text,
         );
+        await FirstTimeAppGuide.markRegistrationCompleted();
 
         if (!mounted) return;
 
@@ -1038,12 +1074,14 @@ setState(() {
   _registering = false;
   _acceptedTerms = false;
   _passwordController.clear();
+  _referralCodeController.clear();
 });
       } else {
         await widget.authService.signIn(
           email: _emailController.text,
           password: _passwordController.text,
         );
+        await FirstTimeAppGuide.handleSignInSuccess();
       }
     } on AuthException catch (error) {
       if (!mounted) return;
@@ -1066,6 +1104,7 @@ setState(() {
         buttonText: context.strings.text('common.retry'),
       );
     } finally {
+      FirstTimeAppGuide.endRegistrationAttempt();
       if (mounted) setState(() => _submitting = false);
     }
   }
@@ -1196,6 +1235,7 @@ setState(() {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
+                              key: FirstTimeAppGuide.anchorKey('auth', 'ACCOUNT ENTRY'),
                               isRegistering
                                   ? context.strings.text('auth.create_account')
                                   : context.strings.text('auth.secure_login'),
@@ -1220,6 +1260,7 @@ setState(() {
 
                             // E-mail.
                             TextFormField(
+                              key: FirstTimeAppGuide.anchorKey('auth', 'EMAIL FIELD'),
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
                               autofillHints: const [AutofillHints.email],
@@ -1248,6 +1289,7 @@ setState(() {
 
                             // Mot de passe.
                             TextFormField(
+                              key: FirstTimeAppGuide.anchorKey('auth', 'PASSWORD FIELD'),
                               controller: _passwordController,
                               obscureText: _obscurePassword,
                               enabled: !_submitting,
@@ -1293,6 +1335,30 @@ setState(() {
                               },
                             ),
 
+                            // Optional referral code. Kept separate from existing auth and terms flow.
+                            if (isRegistering) ...[
+                              const SizedBox(height: 17),
+                              TextFormField(
+                                key: FirstTimeAppGuide.anchorKey('auth', 'REFERRAL CODE (OPTIONAL)'),
+                                controller: _referralCodeController,
+                                enabled: !_submitting,
+                                textCapitalization: TextCapitalization.characters,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+                                  LengthLimitingTextInputFormatter(10),
+                                ],
+                                style: const TextStyle(color: Colors.white, fontSize: 14),
+                                cursorColor: const Color(0xFF83B6FF),
+                                decoration: _premiumInputDecoration(
+                                  label: context.strings.text('referral.signup_code'),
+                                  icon: Icons.card_giftcard_rounded,
+                                ).copyWith(
+                                  helperText: context.strings.text('referral.signup_optional'),
+                                  helperStyle: const TextStyle(color: Color(0xFF94A6CB), fontSize: 11),
+                                ),
+                              ),
+                            ],
+
                             // CGU : obligatoires pendant l'inscription.
                             if (isRegistering) ...[
                               const SizedBox(height: 16),
@@ -1310,6 +1376,7 @@ setState(() {
                                   ),
                                 ),
                                 child: CheckboxListTile(
+                                  key: FirstTimeAppGuide.anchorKey('auth', 'TERMS CHECKBOX'),
                                   value: _acceptedTerms,
                                   onChanged: _submitting
                                       ? null
@@ -1402,6 +1469,7 @@ setState(() {
                                         ],
                                 ),
                                 child: ElevatedButton(
+                                  key: FirstTimeAppGuide.anchorKey('auth', 'CREATE ACCOUNT / LOG IN'),
                                   onPressed:
                                       _submitting ? null : _submit,
                                   style: ElevatedButton.styleFrom(

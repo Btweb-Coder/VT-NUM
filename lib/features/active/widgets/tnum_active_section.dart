@@ -3,10 +3,16 @@ import 'package:flutter/material.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../activate/data/tnum_repository.dart';
 import '../../activate/widgets/tnum_feedback.dart';
+import '../../onboarding/first_time_app_guide.dart';
 import '../../orders/pages/tnum_operation_details_page.dart';
 
 class TnumActiveSection extends StatefulWidget {
-  const TnumActiveSection({super.key});
+  const TnumActiveSection({
+    super.key,
+    this.guideAnchorEnabled = true,
+  });
+
+  final bool guideAnchorEnabled;
 
   @override
   State<TnumActiveSection> createState() => _TnumActiveSectionState();
@@ -24,13 +30,20 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
     builder: (context, snapshot) {
       if (snapshot.hasError) {
         final message = TnumFeedbackMessage.fromError(snapshot.error!);
-        return Padding(
+        final errorMessage = Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Text(
             context.strings.text(message.messageKey),
             style: const TextStyle(color: Colors.orangeAccent),
           ),
         );
+        return widget.guideAnchorEnabled
+            ? FirstTimeAppGuide.anchor(
+                'active',
+                'SMS / VERIFICATION CODE',
+                errorMessage,
+              )
+            : errorMessage;
       }
       final rows = snapshot.data ?? const <Map<String, dynamic>>[];
       return Column(
@@ -57,11 +70,22 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
             ],
           ),
           if (rows.isEmpty)
-            Text(
-              context.strings.text('tnum.no_active'),
-              style: const TextStyle(color: Color(0xFFA5B4D0)),
-            ),
-          ...rows.map((row) {
+            if (widget.guideAnchorEnabled)
+              FirstTimeAppGuide.anchor(
+                'active',
+                'SMS / VERIFICATION CODE',
+                Text(
+                  context.strings.text('tnum.no_active'),
+                  style: const TextStyle(color: Color(0xFFA5B4D0)),
+                ),
+              )
+            else
+              Text(
+                context.strings.text('tnum.no_active'),
+                style: const TextStyle(color: Color(0xFFA5B4D0)),
+              ),
+          ...rows.asMap().entries.map((entry) {
+            final row = entry.value;
             final service = Map<String, dynamic>.from(
               row['services'] as Map? ?? {},
             );
@@ -69,7 +93,7 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
               row['countries'] as Map? ?? {},
             );
             final id = '${row['id']}';
-            return Card(
+            final card = Card(
               color: const Color(0xFF151D36),
               child: ListTile(
                 onTap: () => Navigator.push(
@@ -96,6 +120,13 @@ class _TnumActiveSectionState extends State<TnumActiveSection> {
                 ),
               ),
             );
+            return entry.key == 0 && widget.guideAnchorEnabled
+                ? FirstTimeAppGuide.anchor(
+                    'active',
+                    'SMS / VERIFICATION CODE',
+                    card,
+                  )
+                : card;
           }),
         ],
       );

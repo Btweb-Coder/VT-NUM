@@ -47,8 +47,19 @@ class AuthService {
   Future<void> register({
     required String email,
     required String password,
+    String? referralCode,
   }) async {
     final normalizedEmail = email.trim();
+    final normalizedReferralCode = referralCode?.trim().toUpperCase() ?? '';
+    if (normalizedReferralCode.isNotEmpty) {
+      final validation = await _client.rpc(
+        'referral_validate_code',
+        params: {'p_code': normalizedReferralCode},
+      );
+      if (validation != true) {
+        throw const AuthException('INVALID_OR_UNAVAILABLE_REFERRAL_CODE');
+      }
+    }
 
     final response = await _client.auth.signUp(
       email: normalizedEmail,
@@ -57,6 +68,8 @@ class AuthService {
       data: {
         'terms_accepted': true,
         'terms_version': '2026-10-29',
+        if (normalizedReferralCode.isNotEmpty)
+          'referral_code': normalizedReferralCode,
       },
     );
 

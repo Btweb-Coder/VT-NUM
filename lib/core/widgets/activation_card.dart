@@ -10,12 +10,14 @@ class ActivationCard extends StatelessWidget {
 
   final VoidCallback? onCancel;
   final VoidCallback? onGetAnotherNumber;
+  final Key? smsGuideAnchorKey;
 
   const ActivationCard({
     super.key,
     required this.activation,
     this.onCancel,
     this.onGetAnotherNumber,
+    this.smsGuideAnchorKey,
   });
 
   @override
@@ -61,15 +63,23 @@ final isProcessing = activation.isProcessing && !isReplaced;
 
           const SizedBox(height: 20),
 
-          if (isReplaced) ...[
-  _replacedSection(context),
-] else if (hasCode) ...[
-  _codeSection(context),
-] else if (isExpired) ...[
-  _expiredSection(context),
-] else ...[
-  _waitingSection(context),
-],
+          if (smsGuideAnchorKey != null)
+            KeyedSubtree(
+              key: smsGuideAnchorKey,
+              child: _smsSection(
+                context,
+                isReplaced: isReplaced,
+                hasCode: hasCode,
+                isExpired: isExpired,
+              ),
+            )
+          else
+            _smsSection(
+              context,
+              isReplaced: isReplaced,
+              hasCode: hasCode,
+              isExpired: isExpired,
+            ),
 
           const SizedBox(height: 18),
 
@@ -307,6 +317,18 @@ Widget _statusBadge(BuildContext context, {
         ),
       ],
     );
+  }
+
+  Widget _smsSection(
+    BuildContext context, {
+    required bool isReplaced,
+    required bool hasCode,
+    required bool isExpired,
+  }) {
+    if (isReplaced) return _replacedSection(context);
+    if (hasCode) return _codeSection(context);
+    if (isExpired) return _expiredSection(context);
+    return _waitingSection(context);
   }
 
   // ============================================================

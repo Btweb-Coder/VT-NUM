@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'order_details_page.dart';
 import 'tnum_operation_details_page.dart';
 import '../../activate/data/tnum_repository.dart';
 import '../../activate/widgets/tnum_feedback.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 class _OrdersPremiumBackground extends StatefulWidget {
   final Widget child;
@@ -153,15 +155,40 @@ class _OrdersStarsPainter extends CustomPainter {
 }
 
 class OrdersPage extends StatefulWidget {
-  const OrdersPage({super.key});
+  const OrdersPage({super.key, this.isVisible = false});
+
+  final bool isVisible;
 
   @override
   State<OrdersPage> createState() => _OrdersPageState();
 }
 
 class _OrdersPageState extends State<OrdersPage> {
+  final ScrollController _guideScrollController = ScrollController();
+  bool _guideScheduled = false;
   late Future<List<Map<String, dynamic>>> _tnumHistory = TnumRepository()
       .activations(history: true);
+
+  @override
+  void initState() {
+    super.initState();
+    FirstTimeAppGuide.registerReveal('history', () {
+      if (_guideScrollController.hasClients) {
+        _guideScrollController.animateTo(
+          _guideScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    FirstTimeAppGuide.unregisterReveal('history');
+    _guideScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +212,21 @@ class _OrdersPageState extends State<OrdersPage> {
             return FutureBuilder<List<Map<String, dynamic>>>(
               future: _tnumHistory,
               builder: (context, historySnapshot) {
+                if (widget.isVisible &&
+                    !_guideScheduled &&
+                    historySnapshot.connectionState == ConnectionState.done) {
+                  _guideScheduled = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && widget.isVisible) {
+                      unawaited(
+                        FirstTimeAppGuide.showIfNeeded(this.context, 'history'),
+                      );
+                    } else {
+                      _guideScheduled = false;
+                    }
+                  });
+                }
+
                 final tnumRows =
                     historySnapshot.data ?? const <Map<String, dynamic>>[];
                 final operationCount = orders.length + tnumRows.length;
@@ -241,6 +283,7 @@ class _OrdersPageState extends State<OrdersPage> {
                     );
                   },
                   child: ListView(
+                    controller: _guideScrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                     children: [
@@ -252,14 +295,35 @@ class _OrdersPageState extends State<OrdersPage> {
 
                       const SizedBox(height: 29),
 
-                      _buildSectionHeader(context, operationCount),
+                      FirstTimeAppGuide.anchor('history', 'HISTORY LIST', _buildSectionHeader(context, operationCount)),
 
                       const SizedBox(height: 16),
 
                       if (operationTiles.isEmpty)
-                        _buildEmptyState(context)
+                        FirstTimeAppGuide.anchor(
+                          'history',
+                          'ORIGIN AND STATUS',
+                          FirstTimeAppGuide.anchor(
+                            'history',
+                            'OPEN A HISTORY ITEM',
+                            _buildEmptyState(context),
+                          ),
+                        )
                       else
-                        ...operationTiles.map((item) => item.child),
+                        ...operationTiles.asMap().entries.map((entry) {
+                          final item = entry.value;
+                          return entry.key == 0
+                              ? FirstTimeAppGuide.anchor(
+                                  'history',
+                                  'ORIGIN AND STATUS',
+                                  FirstTimeAppGuide.anchor(
+                                    'history',
+                                    'OPEN A HISTORY ITEM',
+                                    item.child,
+                                  ),
+                                )
+                              : item.child;
+                        }),
                       if (historySnapshot.hasError)
                         Padding(
                           padding: const EdgeInsets.all(12),

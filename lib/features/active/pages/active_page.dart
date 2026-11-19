@@ -12,6 +12,7 @@ import '../../../core/services/order_repository.dart';
 import '../../activate/data/activation_repository.dart';
 import '../../../core/widgets/activation_card.dart';
 import '../widgets/tnum_active_section.dart';
+import '../../onboarding/first_time_app_guide.dart';
 
 class _ActivePremiumBackground extends StatefulWidget {
   final Widget child;
@@ -167,7 +168,9 @@ class _ActiveStarsPainter extends CustomPainter {
 }
 
 class ActivePage extends StatefulWidget {
-  const ActivePage({super.key});
+  const ActivePage({super.key, this.isVisible = false});
+
+  final bool isVisible;
 
   @override
   State<ActivePage> createState() => _ActivePageState();
@@ -179,10 +182,22 @@ class _ActivePageState extends State<ActivePage> {
   final _audit = AuditService();
 
   Timer? _timer;
+  bool _guideScheduled = false;
+  final ScrollController _guideScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+
+    FirstTimeAppGuide.registerReveal('active', () {
+      if (_guideScrollController.hasClients) {
+        _guideScrollController.animateTo(
+          _guideScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
 
     _timer = Timer.periodic(
       const Duration(seconds: 1),
@@ -197,6 +212,8 @@ class _ActivePageState extends State<ActivePage> {
   @override
   void dispose() {
     _timer?.cancel();
+    FirstTimeAppGuide.unregisterReveal('active');
+    _guideScrollController.dispose();
     super.dispose();
   }
 
@@ -221,6 +238,19 @@ class _ActivePageState extends State<ActivePage> {
               );
             }
 
+            if (widget.isVisible && !_guideScheduled) {
+              _guideScheduled = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && widget.isVisible) {
+                  unawaited(
+                    FirstTimeAppGuide.showIfNeeded(this.context, 'active'),
+                  );
+                } else {
+                  _guideScheduled = false;
+                }
+              });
+            }
+
             final activations = snapshot.data!;
 
             return RefreshIndicator(
@@ -228,6 +258,7 @@ class _ActivePageState extends State<ActivePage> {
               backgroundColor: const Color(0xFF111A32),
               onRefresh: () async {},
               child: ListView(
+                controller: _guideScrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                 children: [
@@ -239,15 +270,20 @@ class _ActivePageState extends State<ActivePage> {
 
                   const SizedBox(height: 29),
 
-                  _buildSectionHeader(activations.length),
+                  FirstTimeAppGuide.anchor('active', 'ACTIVE NUMBERS LIST', _buildSectionHeader(activations.length)),
 
                   const SizedBox(height: 16),
 
                   if (activations.isEmpty)
-                    _message(context.strings.text('active.none'))
+                    FirstTimeAppGuide.anchor(
+                      'active',
+                      'NUMBER AND STATUS',
+                      _message(context.strings.text('active.none')),
+                    )
                   else
-                    ...activations.map(
-                      (activation) => Padding(
+                    ...activations.asMap().entries.map((entry) {
+                      final activation = entry.value;
+                      final card = Padding(
                         padding: const EdgeInsets.only(bottom: 14),
                         child: Column(children: [
                           Align(alignment: Alignment.centerLeft,
@@ -256,19 +292,37 @@ class _ActivePageState extends State<ActivePage> {
                                 style: const TextStyle(color: Color(0xFF8FB6FF), fontSize: 10, fontWeight: FontWeight.w900)))),
                           ActivationCard(
                             activation: activation,
+                            smsGuideAnchorKey: entry.key == 0
+                                ? FirstTimeAppGuide.anchorKey(
+                                    'active',
+                                    'SMS / VERIFICATION CODE',
+                                  )
+                                : null,
                             onCancel: () => _cancel(activation),
                             onGetAnotherNumber: () => _replace(activation),
                           ),
                         ]),
-                      ),
-                    ),
+                      );
+                      return entry.key == 0
+                          ? FirstTimeAppGuide.anchor(
+                              'active',
+                              'AVAILABLE ACTIONS',
+                              FirstTimeAppGuide.anchor('active', 'NUMBER AND STATUS', card),
+                            )
+                          : card;
+                    }),
 
                   const SizedBox(height: 20),
-                  const TnumActiveSection(),
+                  TnumActiveSection(
+                    guideAnchorEnabled: activations.isEmpty,
+                  ),
 
                   const SizedBox(height: 18),
 
-                  _buildFooter(),
+                  if (activations.isEmpty)
+                    FirstTimeAppGuide.anchor('active', 'AVAILABLE ACTIONS', _buildFooter())
+                  else
+                    _buildFooter(),
                 ],
               ),
             );
