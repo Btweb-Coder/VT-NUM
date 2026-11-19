@@ -565,6 +565,14 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
         .clamp(8.0, maxBubbleTop >= 8.0 ? maxBubbleTop : 8.0)
         .toDouble();
 
+    final pointerHeight = targetRect == null ? 0.0 : 12.0;
+    final bubbleLeft = (size.width - bubbleWidth) / 2;
+    final pointerAlignment = targetRect == null
+        ? 0.0
+        : (((targetRect.center.dx - bubbleLeft) / bubbleWidth) * 2 - 1)
+            .clamp(-0.82, 0.82)
+            .toDouble();
+
     final header = Row(
       children: [
         Container(
@@ -589,7 +597,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
               Text(
                 widget.french ? 'GUIDE PAS À PAS' : 'FIRST-TIME APP GUIDE',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFF17233D),
                   fontWeight: FontWeight.w900,
                   fontSize: 12,
                   letterSpacing: 0.4,
@@ -599,7 +607,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
               Text(
                 _sectionTitle,
                 style: const TextStyle(
-                  color: Color(0xFF9FB5E6),
+                  color: Color(0xFF71809B),
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.7,
@@ -616,8 +624,8 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
       child: LinearProgressIndicator(
         value: progress,
         minHeight: 5,
-        backgroundColor: Colors.white.withValues(alpha: 0.08),
-        valueColor: const AlwaysStoppedAnimation(Color(0xFF6E8BFF)),
+        backgroundColor: const Color(0xFFE7ECF5),
+        valueColor: const AlwaysStoppedAnimation(Color(0xFF4776FF)),
       ),
     );
 
@@ -625,7 +633,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
       children: [
         const Icon(
           Icons.touch_app_rounded,
-          color: Color(0xFF8FB6FF),
+          color: Color(0xFF4776FF),
           size: 20,
         ),
         const SizedBox(width: 8),
@@ -633,7 +641,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
           child: Text(
             target,
             style: const TextStyle(
-              color: Color(0xFF8FB6FF),
+              color: Color(0xFF4776FF),
               fontSize: 10,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.45,
@@ -642,7 +650,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
         ),
         Text(
           count,
-          style: const TextStyle(color: Color(0xFF8393B3), fontSize: 11),
+          style: const TextStyle(color: Color(0xFF71809B), fontSize: 11),
         ),
       ],
     );
@@ -656,7 +664,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
           Text(
             title,
             style: const TextStyle(
-              color: Colors.white,
+              color: Color(0xFF17233D),
               fontSize: 21,
               height: 1.2,
               fontWeight: FontWeight.w900,
@@ -678,7 +686,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
               return Text(
                 body.substring(0, visible),
                 style: const TextStyle(
-                  color: Color(0xFFC1CBE0),
+                  color: Color(0xFF52617A),
                   fontSize: 13,
                   height: 1.6,
                 ),
@@ -694,7 +702,7 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
         TextButton(
           onPressed: () => widget.onComplete(_GuideResult.skipAll),
           style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFFB9C8E8),
+            foregroundColor: const Color(0xFF64748B),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           ),
           child: Text(widget.french ? 'Ignorer' : 'Skip'),
@@ -704,8 +712,8 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
           OutlinedButton(
             onPressed: _back,
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+              foregroundColor: const Color(0xFF34435E),
+              side: const BorderSide(color: Color(0xFFD8E0ED)),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             ),
             child: Text(widget.french ? 'Précédent' : 'Back'),
@@ -735,9 +743,59 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
           : 'The guide never makes a purchase or payment.',
       textAlign: TextAlign.center,
       style: const TextStyle(
-        color: Color(0xFF7788A9),
+        color: Color(0xFF8A96AA),
         fontSize: 10,
         height: 1.4,
+      ),
+    );
+
+    final card = Container(
+      height: bubbleHeight - pointerHeight,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE6EBF3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  header,
+                  const SizedBox(height: 15),
+                  progressIndicator,
+                  const SizedBox(height: 14),
+                  targetLine,
+                  const SizedBox(height: 13),
+                  stepContent,
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                navigation,
+                const SizedBox(height: 5),
+                footerNote,
+              ],
+            ),
+          ),
+        ],
       ),
     );
 
@@ -764,57 +822,31 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
               ),
             ),
             Positioned(
-              left: (size.width - bubbleWidth) / 2,
+              left: bubbleLeft,
               top: bubbleTop,
               width: bubbleWidth,
-              child: Material(
-                color: const Color(0xFF101A31),
-                elevation: 24,
-                shadowColor: Colors.black.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(24),
-                clipBehavior: Clip.antiAlias,
-                child: Container(
-                  height: bubbleHeight,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: const Color(0xFF7199FF).withValues(alpha: 0.55),
+              height: bubbleHeight,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (targetRect != null && placeBelow)
+                    Align(
+                      alignment: Alignment(pointerAlignment, 0),
+                      child: CustomPaint(
+                        size: const Size(28, 12),
+                        painter: const _BubblePointerPainter(pointsUp: true),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              header,
-                              const SizedBox(height: 15),
-                              progressIndicator,
-                              const SizedBox(height: 14),
-                              targetLine,
-                              const SizedBox(height: 13),
-                              stepContent,
-                            ],
-                          ),
-                        ),
+                  card,
+                  if (targetRect != null && !placeBelow)
+                    Align(
+                      alignment: Alignment(pointerAlignment, 0),
+                      child: CustomPaint(
+                        size: const Size(28, 12),
+                        painter: const _BubblePointerPainter(pointsUp: false),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            navigation,
-                            const SizedBox(height: 5),
-                            footerNote,
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                ],
               ),
             ),
           ],
@@ -822,6 +854,34 @@ class _SpotlightGuideOverlayState extends State<_SpotlightGuideOverlay> {
       ),
     );
   }
+}
+class _BubblePointerPainter extends CustomPainter {
+  const _BubblePointerPainter({required this.pointsUp});
+
+  final bool pointsUp;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+    if (pointsUp) {
+      path
+        ..moveTo(0, size.height)
+        ..lineTo(size.width / 2, 0)
+        ..lineTo(size.width, size.height)
+        ..close();
+    } else {
+      path
+        ..moveTo(0, 0)
+        ..lineTo(size.width / 2, size.height)
+        ..lineTo(size.width, 0)
+        ..close();
+    }
+    canvas.drawPath(path, Paint()..color = Colors.white);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BubblePointerPainter oldDelegate) =>
+      oldDelegate.pointsUp != pointsUp;
 }
 
 class _SpotlightPainter extends CustomPainter {
